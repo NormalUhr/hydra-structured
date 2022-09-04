@@ -9,7 +9,6 @@ def get_lr_policy(lr_schedule):
     Args should contain a single choice for learning rate scheduler."""
 
     d = {
-        "constant": constant_schedule,
         "cosine": cosine_schedule,
         "step": step_schedule,
     }
@@ -44,23 +43,15 @@ def new_lr(optimizer, lr):
         param_group["lr"] = lr
 
 
-def constant_schedule(optimizer, args):
-    def set_lr(epoch, lr=args.lr, epochs=args.epochs):
-        if epoch < args.warmup_epochs:
-            lr = args.warmup_lr
-
-        new_lr(optimizer, lr)
-
-    return set_lr
-
-
 def cosine_schedule(optimizer, args):
-    def set_lr(epoch, lr=args.lr, epochs=args.epochs):
-        if epoch < args.warmup_epochs:
-            a = args.warmup_lr
+    def set_lr(step, step_per_epoch, lr=args.lr):
+        warmup_step = args.warmup_epochs * step_per_epoch
+        total_cosine_step = (args.epochs - args.warmup_epochs) * step_per_epoch
+        if step < warmup_step:
+            a = lr * step / warmup_step
         else:
-            epoch = epoch - args.warmup_epochs
-            a = lr * 0.5 * (1 + np.cos((epoch - 1) / epochs * np.pi))
+            cos_step = step - warmup_step
+            a = lr * 0.5 * (1 + np.cos(cos_step / total_cosine_step * np.pi))
 
         new_lr(optimizer, a)
 
@@ -68,19 +59,18 @@ def cosine_schedule(optimizer, args):
 
 
 def step_schedule(optimizer, args):
-    def set_lr(epoch, lr=args.lr, epochs=args.epochs):
-        if epoch < args.warmup_epochs:
-            a = args.warmup_lr
-        else:
-            epoch = epoch - args.warmup_epochs
+    def set_lr(step, step_per_epoch, lr=args.lr):
+        warmup_step = args.warmup_epochs * step_per_epoch
+        total_step = (args.epochs - args.warmup_epochs) * step_per_epoch
 
-        a = lr
-        if epoch >= 0.75 * epochs:
-            a = lr * 0.1
-        if epoch >= 0.9 * epochs:
-            a = lr * 0.01
-        if epoch >= epochs:
-            a = lr * 0.001
+        if step < warmup_step:
+            a = lr * step / warmup_step
+        else:
+            a = lr
+            if step >= 0.5 * total_step:
+                a *= 0.1
+            if step >= 0.75 * total_step:
+                a *= 0.01
 
         new_lr(optimizer, a)
 

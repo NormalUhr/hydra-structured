@@ -1,15 +1,15 @@
 import time
 
 import torch
-import torch.nn as nn
 import torchvision
 
 from utils.logging import AverageMeter, ProgressMeter
 from utils.eval import accuracy
 
+
 # TODO: support sm_loader when len(sm_loader.dataset) < len(train_loader.dataset)
 def train(
-    model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer
+        model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer, lr_policy
 ):
     print(" ->->->->->->->->->-> One epoch with Natural training <-<-<-<-<-<-<-<-<-<-")
 
@@ -29,7 +29,11 @@ def train(
 
     dataloader = train_loader if sm_loader is None else zip(train_loader, sm_loader)
 
+    step = epoch * len(train_loader)
+
     for i, data in enumerate(dataloader):
+
+        step += 1
         if sm_loader:
             images, target = (
                 torch.cat([d[0] for d in data], 0).to(device),
@@ -38,20 +42,20 @@ def train(
         else:
             images, target = data[0].to(device), data[1].to(device)
 
-        # basic properties of training
-        if i == 0:
-            print(
-                images.shape,
-                target.shape,
-                f"Batch_size from args: {args.batch_size}",
-                "lr: {:.5f}".format(optimizer.param_groups[0]["lr"]),
-            )
-            print(
-                "Pixel range for training images : [{}, {}]".format(
-                    torch.min(images).data.cpu().numpy(),
-                    torch.max(images).data.cpu().numpy(),
-                )
-            )
+        # # basic properties of training
+        # if i == 0:
+        #     print(
+        #         images.shape,
+        #         target.shape,
+        #         f"Batch_size from args: {args.batch_size}",
+        #         "lr: {:.5f}".format(optimizer.param_groups[0]["lr"]),
+        #     )
+        #     print(
+        #         "Pixel range for training images : [{}, {}]".format(
+        #             torch.min(images).data.cpu().numpy(),
+        #             torch.max(images).data.cpu().numpy(),
+        #         )
+        #     )
 
         output = model(images)
         loss = criterion(output, target)
@@ -65,6 +69,8 @@ def train(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        print("step :", step)
+        lr_policy(step, len(train_loader))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
@@ -80,6 +86,5 @@ def train(
         if i == 0:
             writer.add_image(
                 "training-images",
-                torchvision.utils.make_grid(images[0 : len(images) // 4]),
+                torchvision.utils.make_grid(images[0: len(images) // 4]),
             )
-
