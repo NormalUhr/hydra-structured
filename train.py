@@ -1,34 +1,26 @@
-# Some part borrowed from official tutorial https://github.com/pytorch/examples/blob/master/imagenet/main.py
-from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import print_function
 
-import os
-import sys
-import numpy as np
-import argparse
-import importlib
-import time
-import logging
-from pathlib import Path
 import copy
+import importlib
+import logging
+import os
+from pathlib import Path
 
+import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.data.dataset import Dataset
-from torchvision import datasets, transforms
 from torch.utils.tensorboard import SummaryWriter
 
-import models
 import data
+import models
 from args import parse_args
-from utils.schedules import get_lr_policy, get_optimizer
 from utils.logging import (
     save_checkpoint,
     create_subdirs,
     parse_configs_file,
     clone_results_to_latest_subdir,
 )
-from utils.semisup import get_semisup_dataloader
 from utils.model import (
     get_layers,
     prepare_model,
@@ -39,6 +31,8 @@ from utils.model import (
     sanity_check_paramter_updates,
     snip_init,
 )
+from utils.schedules import get_lr_policy, get_optimizer
+from utils.semisup import get_semisup_dataloader
 
 
 # TODO: update wrn, resnet models. Save both subnet and dense version.
@@ -47,7 +41,8 @@ from utils.model import (
 
 def main():
     args = parse_args()
-    parse_configs_file(args)
+    if args.configs is not None and os.path.isfile(args.configs):
+        parse_configs_file(args)
 
     # sanity checks
     if args.exp_mode in ["prune", "finetune"] and not args.resume:
@@ -60,14 +55,12 @@ def main():
         n = len(next(os.walk(result_main_dir))[-2])  # prev experiments with same name
         result_sub_dir = os.path.join(
             result_main_dir,
-            "{}--k-{:.2f}_trainer-{}_lr-{}_epochs-{}_warmuplr-{}_warmupepochs-{}".format(
-                n + 1,
+            "{}--k-{:.2f}_trainer-{}_lr-{}_epochs-{}".format(
+                n,
                 args.k,
                 args.trainer,
                 args.lr,
                 args.epochs,
-                args.warmup_lr,
-                args.warmup_epochs,
             ),
         )
     else:
@@ -184,6 +177,9 @@ def main():
         "resume => required to resume a previous experiment (loads all parameters)|| "
         "source_net => required to start pruning/fine-tuning from a source model (only load state_dict)"
     )
+
+    best_prec1 = 0
+
     # resume (if checkpoint provided). Continue training with preiovus settings.
     if args.resume:
         if os.path.isfile(args.resume):
@@ -207,8 +203,6 @@ def main():
         logger.info(f"Validation accuracy {args.val_method} for source-net: {p1}")
         if args.evaluate:
             return
-
-    best_prec1 = 0
 
     show_gradients(model)
 
@@ -265,25 +259,25 @@ def main():
         logger.info(
             f"Epoch {epoch}, val-method {args.val_method}, validation accuracy {prec1}, best_prec {best_prec1}"
         )
-        if args.exp_mode in ["prune", "finetune"]:
-            logger.info(
-                "Pruned model: {:.2f}%".format(
-                    current_model_pruned_fraction(
-                        model, os.path.join(result_sub_dir, "checkpoint"), verbose=False
-                    )
-                )
-            )
+        # if args.exp_mode in ["prune", "finetune"]:
+        #     logger.info(
+        #         "Pruned model: {:.2f}%".format(
+        #             current_model_pruned_fraction(
+        #                 model, os.path.join(result_sub_dir, "checkpoint"), verbose=False
+        #             )
+        #         )
+        #     )
         # clone results to latest subdir (sync after every epoch)
         # Latest_subdir: stores results from latest run of an experiment.
         clone_results_to_latest_subdir(
             result_sub_dir, os.path.join(result_main_dir, "latest_exp")
         )
 
-        # Check what parameters got updated in the current epoch.
-        sw, ss = sanity_check_paramter_updates(model, last_ckpt)
-        logger.info(
-            f"Sanity check (exp-mode: {args.exp_mode}): Weight update - {sw}, Scores update - {ss}"
-        )
+        # # Check what parameters got updated in the current epoch.
+        # sw, ss = sanity_check_paramter_updates(model, last_ckpt)
+        # logger.info(
+        #     f"Sanity check (exp-mode: {args.exp_mode}): Weight update - {sw}, Scores update - {ss}"
+        # )
 
     current_model_pruned_fraction(
         model, os.path.join(result_sub_dir, "checkpoint"), verbose=True
