@@ -69,7 +69,6 @@ def train(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        print("step :", step)
         lr_policy(step, len(train_loader))
 
         # measure elapsed time
