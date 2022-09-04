@@ -11,6 +11,7 @@ def get_lr_policy(lr_schedule):
     d = {
         "cosine": cosine_schedule,
         "step": step_schedule,
+        "cubic": cubic_schedule,
     }
     return d[lr_schedule]
 
@@ -41,6 +42,21 @@ def get_optimizer(model, args):
 def new_lr(optimizer, lr):
     for param_group in optimizer.param_groups:
         param_group["lr"] = lr
+
+
+def cubic_schedule(optimizer, args):
+    def set_lr(step, step_per_epoch, lr=args.lr):
+        warmup_step = args.warmup_epochs * step_per_epoch
+        total_step = (args.epochs - args.warmup_epochs) * step_per_epoch
+        if step < warmup_step:
+            a = lr * step / warmup_step
+        else:
+            cos_step = step - warmup_step
+            a = lr * (1 - cos_step / total_step) ** 3
+
+        new_lr(optimizer, a)
+
+    return set_lr
 
 
 def cosine_schedule(optimizer, args):
