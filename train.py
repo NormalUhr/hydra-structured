@@ -28,7 +28,6 @@ from utils.model import (
     scale_rand_init,
     show_gradients,
     current_model_pruned_fraction,
-    sanity_check_paramter_updates,
     snip_init,
 )
 from utils.schedules import get_lr_policy, get_optimizer
@@ -49,13 +48,13 @@ def main():
         assert args.source_net, "Provide checkpoint to prune/finetune"
 
     # create resutls dir (for logs, checkpoints, etc.)
-    result_main_dir = os.path.join(Path(args.result_dir), args.exp_name, args.exp_mode)
+    result_main_dir = os.path.join(Path(args.result_dir), args.arch, args.exp_name, args.exp_mode)
 
     if os.path.exists(result_main_dir):
         n = len(next(os.walk(result_main_dir))[-2])  # prev experiments with same name
         result_sub_dir = os.path.join(
             result_main_dir,
-            "{}--k-{:.2f}_trainer-{}_lr-{}_epochs-{}".format(
+            "{}--k-{:.2f}_trainer-{}_epochs-{}".format(
                 n,
                 args.k,
                 args.trainer,
@@ -67,7 +66,7 @@ def main():
         os.makedirs(result_main_dir, exist_ok=True)
         result_sub_dir = os.path.join(
             result_main_dir,
-            "1--k-{:.2f}_trainer-{}_lr-{}_epochs-{}_warmuplr-{}_warmupepochs-{}".format(
+            "1--k-{:.2f}_trainer-{}_epochs-{}".format(
                 args.k,
                 args.trainer,
                 args.lr,
