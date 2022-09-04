@@ -225,7 +225,7 @@ def parse_args():
         "--lr-schedule",
         type=str,
         default="cosine",
-        choices=("step", "cosine"),
+        choices=("step", "cosine", "cubic"),
         help="Learning rate schedule",
     )
     parser.add_argument("--momentum", type=float, default=0.9, help="SGD momentum")
