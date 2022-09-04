@@ -72,8 +72,6 @@ def main():
                 args.trainer,
                 args.lr,
                 args.epochs,
-                args.warmup_lr,
-                args.warmup_epochs,
             ),
         )
     create_subdirs(result_sub_dir)
