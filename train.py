@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import copy
 import importlib
 import logging
 import os
@@ -37,6 +36,8 @@ from utils.semisup import get_semisup_dataloader
 # TODO: update wrn, resnet models. Save both subnet and dense version.
 # TODO: take care of BN, bias in pruning, support structured pruning
 
+global step
+
 
 def main():
     args = parse_args()
@@ -66,7 +67,7 @@ def main():
         os.makedirs(result_main_dir, exist_ok=True)
         result_sub_dir = os.path.join(
             result_main_dir,
-            "1--k-{:.2f}_trainer-{}_epochs-{}".format(
+            "0--k-{:.2f}_trainer-{}_epochs-{}".format(
                 args.k,
                 args.trainer,
                 args.lr,
@@ -159,13 +160,7 @@ def main():
     # Scaled random initialization. Useful when training a high sparse net from scratch.
     # If not used, a sparse net (without batch-norm) from scratch will not coverge.
     # With batch-norm its not really necessary.
-    if args.scale_rand_init:
-        scale_rand_init(model, args.k)
-
-    # Scaled random initialization. Useful when training a high sparse net from scratch.
-    # If not used, a sparse net (without batch-norm) from scratch will not coverge.
-    # With batch-norm its not really necessary.
-    if args.scale_rand_init:
+    elif args.scale_rand_init:
         scale_rand_init(model, args.k)
 
     if args.snip_init:
@@ -205,14 +200,15 @@ def main():
 
     show_gradients(model)
 
-    if args.source_net:
-        last_ckpt = checkpoint["state_dict"]
-    else:
-        last_ckpt = copy.deepcopy(model.state_dict())
+    # if args.source_net:
+    #     last_ckpt = checkpoint["state_dict"]
+    # else:
+    #     last_ckpt = copy.deepcopy(model.state_dict())
 
     # Start training
     for epoch in range(args.start_epoch, args.epochs + args.warmup_epochs):
-        lr_policy(epoch)  # adjust learning rate
+        # change this per epoch lr adjuster to per step
+        # lr_policy(epoch)  # adjust learning rate
 
         # train
         trainer(
@@ -225,6 +221,7 @@ def main():
             epoch,
             args,
             writer,
+            lr_policy,
         )
 
         # evaluate on test set

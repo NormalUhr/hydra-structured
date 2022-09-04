@@ -1,8 +1,10 @@
+trained_models
+results
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-trained_models
 *.pickle
 *.pkl
 *.npy

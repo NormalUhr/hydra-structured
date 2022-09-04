@@ -7,16 +7,20 @@ def parse_args():
 
     # primary
     parser.add_argument(
-        "--configs", type=str, default=None, help="configs file",
+        "--configs",
+        type=str,
+        default=None,
+        help="configs file",
     )
     parser.add_argument(
         "--result-dir",
-        default="./trained_models",
+        default="./results",
         type=str,
         help="directory to save results",
     )
     parser.add_argument(
         "--exp-name",
+        default="debug",
         type=str,
         help="Name of the experiment (creates dir with this name in --result-dir)",
     )
@@ -29,7 +33,10 @@ def parse_args():
     )
 
     # Model
-    parser.add_argument("--arch", type=str, help="Model achitecture")
+    parser.add_argument("--arch",
+                        default="resnet20s",
+                        type=str,
+                        help="Model architecture")
     parser.add_argument(
         "--num-classes",
         type=int,
@@ -37,7 +44,11 @@ def parse_args():
         help="Number of output classes in the model",
     )
     parser.add_argument(
-        "--layer-type", type=str, choices=("dense", "subnet"), help="dense | subnet"
+        "--layer-type",
+        type=str,
+        default="subnet",
+        choices=("dense", "subnet"),
+        help="dense | subnet"
     )
     parser.add_argument(
         "--init-type",
@@ -71,7 +82,7 @@ def parse_args():
     parser.add_argument(
         "--scale_rand_init",
         action="store_true",
-        default=False,
+        default=True,
         help="Init weight with scaling using pruning ratio",
     )
 
@@ -219,11 +230,12 @@ def parse_args():
     )
     parser.add_argument("--momentum", type=float, default=0.9, help="SGD momentum")
     parser.add_argument(
-        "--warmup-epochs", type=int, default=0, help="Number of warmup epochs"
+        "--warmup-epochs",
+        type=int,
+        default=0,
+        help="Number of warmup epochs"
     )
-    parser.add_argument(
-        "--warmup-lr", type=float, default=0.1, help="warmup learning rate"
-    )
+
     parser.add_argument(
         "--save-dense",
         action="store_true",

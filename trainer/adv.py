@@ -10,7 +10,7 @@ from utils.adv import trades_loss
 
 # TODO: add adversarial accuracy.
 def train(
-    model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer
+    model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer, step, lr_policy
 ):
     print(
         " ->->->->->->->->->-> One epoch with Adversarial training (TRADES) <-<-<-<-<-<-<-<-<-<-"
@@ -78,6 +78,7 @@ def train(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        lr_policy(step, len(train_loader))
 
         # measure elapsed time
         batch_time.update(time.time() - end)
