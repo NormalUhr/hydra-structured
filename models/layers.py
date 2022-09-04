@@ -1,23 +1,25 @@
-import torch
-import torch.nn as nn
-import torch.autograd as autograd
-from torch.nn.parameter import Parameter
-import torch.nn.functional as F
 import math
 
-# https://github.com/allenai/hidden-networks
+import torch
+import torch.autograd as autograd
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn.parameter import Parameter
+
+
 class GetSubnet(autograd.Function):
     @staticmethod
-    def forward(ctx, scores, k):
+    def forward(ctx, scores, k):  # binarization
         # Get the subnetwork by sorting the scores and using the top k%
-        out = scores.clone()
-        _, idx = scores.flatten().sort()
-        j = int((1 - k) * scores.numel())
+        score_L1_norm = torch.norm(scores.flatten(start_dim=1, end_dim=-1), p=1, dim=1)
+        _, idx = score_L1_norm.sort()
+        j = int((1 - k) * scores.shape[0])
 
         # flat_out and out access the same memory.
-        flat_out = out.flatten()
-        flat_out[idx[:j]] = 0
-        flat_out[idx[j:]] = 1
+        out = scores.clone()
+        flat_out = out.flatten(start_dim=1, end_dim=-1)  # share the same memory
+        flat_out[idx[:j], :] = 0
+        flat_out[idx[j:], :] = 1
 
         return out
 
@@ -33,15 +35,15 @@ class SubnetConv(nn.Conv2d):
     # Gradients to self.weight, self.bias have been turned off by default.
 
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride=1,
-        padding=0,
-        dilation=1,
-        groups=1,
-        bias=True,
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=1,
+            padding=0,
+            dilation=1,
+            groups=1,
+            bias=True,
     ):
         super(SubnetConv, self).__init__(
             in_channels,
@@ -102,4 +104,3 @@ class SubnetLinear(nn.Linear):
         x = F.linear(x, self.w, self.bias)
 
         return x
-

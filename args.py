@@ -7,7 +7,7 @@ def parse_args():
 
     # primary
     parser.add_argument(
-        "--configs", type=str, default="", help="configs file",
+        "--configs", type=str, default=None, help="configs file",
     )
     parser.add_argument(
         "--result-dir",
@@ -40,7 +40,8 @@ def parse_args():
         "--layer-type", type=str, choices=("dense", "subnet"), help="dense | subnet"
     )
     parser.add_argument(
-        "--init_type",
+        "--init-type",
+        default="kaiming_normal",
         choices=("kaiming_normal", "kaiming_uniform", "signed_const"),
         help="Which init to use for weight parameters: kaiming_normal | kaiming_uniform | signed_const",
     )
@@ -118,12 +119,12 @@ def parse_args():
         help="Std of normal distribution used to generate noise",
     )
 
-    #parser.add_argument(
+    # parser.add_argument(
     #    "--scale_rand_init",
     #    action="store_true",
     #    default=False,
     #    help="Init weight with scaling using pruning ratio",
-    #)
+    # )
 
     parser.add_argument(
         "--scores_init_type",
@@ -135,9 +136,24 @@ def parse_args():
     parser.add_argument(
         "--dataset",
         type=str,
-        choices=("CIFAR10", "CIFAR100", "SVHN", "MNIST", "imagenet"),
+        default="CIFAR10",
+        # choices=("CIFAR10", "CIFAR100", "SVHN", "MNIST", "imagenet"),
         help="Dataset for training and eval",
     )
+
+    parser.add_argument(
+        "--dataset-idx",
+        type=int,
+        help="The index of the cluster of CIFAR10"
+    )
+
+    parser.add_argument(
+        "--dataset-idx-method",
+        type=str,
+        choices=["dino", "wrn"],
+        help="What method to generalize the cluster"
+    )
+
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -159,7 +175,7 @@ def parse_args():
         help="whether to normalize the data",
     )
     parser.add_argument(
-        "--data-dir", type=str, default="./datasets", help="path to datasets"
+        "--data-dir", type=str, default="../data", help="path to datasets"
     )
 
     parser.add_argument(

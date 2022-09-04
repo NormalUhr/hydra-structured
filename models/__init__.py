@@ -31,6 +31,7 @@ from models.basic import (
 )
 
 from models.resnet import ResNet18, ResNet34, ResNet50
+from models.resnets import resnet20s, resnet56s
 
 __all__ = [
     "vgg2",
@@ -70,4 +71,6 @@ __all__ = [
     "ResNet18",
     "ResNet34",
     "ResNet50",
+    "resnet20s",
+    "resnet56s"
 ]
