@@ -5,18 +5,17 @@
 ## This program is licenced under the BSD 2-Clause License,
 ## contained in the LICENCE file in this directory.
 ##
-import torch
+import logging
+from itertools import chain
+
 import numpy as np
+import torch
+import torch.nn.functional as F
 from torch.nn import DataParallel
 from torch.nn import Sequential, Conv2d, Linear, ReLU
-import torch.nn.functional as F
-from itertools import chain
-import torch.nn as nn
-import logging
 
 from models.basic import Flatten
 from models.layers import GetSubnet
-
 
 logging.basicConfig(level=logging.INFO)
 # logging.basicConfig(level=logging.DEBUG)
@@ -40,11 +39,13 @@ class BoundFlatten(torch.nn.Module):
             if A is None:
                 return None
             return A.view(A.size(0), A.size(1), *self.shape)
+
         if self.bound_opts.get("same-slope", False) and (last_uA is not None) and (last_lA is not None):
             new_bound = _bound_oneside(last_uA)
             return new_bound, 0, new_bound, 0
         else:
             return _bound_oneside(last_uA), 0, _bound_oneside(last_lA), 0
+
 
 class BoundLinear(Linear):
     def __init__(self, in_features, out_features, bias=True, bound_opts=None):
@@ -54,17 +55,17 @@ class BoundLinear(Linear):
 
     @staticmethod
     def convert(linear_layer, bound_opts=None):
-        
+
         if 'SubnetLinear' in (str(linear_layer.__class__.__name__)):
             # print("subnet conv converted")
             l = BoundLinear(linear_layer.in_features,
-                linear_layer.out_features,
-                linear_layer.bias is not None,
-                bound_opts)
+                            linear_layer.out_features,
+                            linear_layer.bias is not None,
+                            bound_opts)
             l.layer = linear_layer
 
             adj = GetSubnet.apply(linear_layer.popup_scores.abs(),
-                        linear_layer.k)
+                                  linear_layer.k)
             l.layer.w = l.layer.weight * adj
             # l.weight = linear_layer.weight
             l.weight = linear_layer.weight
@@ -72,9 +73,9 @@ class BoundLinear(Linear):
             return l
 
         l = BoundLinear(linear_layer.in_features,
-                linear_layer.out_features,\
-                linear_layer.bias is not None,
-                bound_opts)
+                        linear_layer.out_features, \
+                        linear_layer.bias is not None,
+                        bound_opts)
         # l.weight.copy_(linear_layer.weight.data)
         # l.bias.data.copy_(linear_layer.bias.data)
         l.weight = linear_layer.weight
@@ -83,7 +84,7 @@ class BoundLinear(Linear):
         return l
 
     def forward(self, input):
-        
+
         if 'SubnetLinear' in (str(self.layer.__class__.__name__)):
             adj = GetSubnet.apply(self.layer.popup_scores.abs(), self.layer.k)
             self.layer.w = self.layer.weight * adj
@@ -111,6 +112,7 @@ class BoundLinear(Linear):
             sum_bias = last_A.matmul(self.bias)
             logger.debug('sum_bias %s', sum_bias.size())
             return next_A, sum_bias
+
         if self.bound_opts.get("same-slope", False) and (last_uA is not None) and (last_lA is not None):
             uA, ubias = _bound_oneside(last_uA, True)
             _, lbias = _bound_oneside(last_lA, False)
@@ -120,7 +122,7 @@ class BoundLinear(Linear):
             lA, lbias = _bound_oneside(last_lA)
         return uA, ubias, lA, lbias
 
-    def interval_propagate(self, norm, h_U, h_L, eps, C = None):
+    def interval_propagate(self, norm, h_U, h_L, eps, C=None):
         if 'SubnetLinear' in (str(self.layer.__class__.__name__)):
             adj = GetSubnet.apply(self.layer.popup_scores.abs(), self.layer.k)
 
@@ -155,7 +157,7 @@ class BoundLinear(Linear):
                     deviation = diff.matmul(weight_abs.t())
             else:
                 # L2 norm
-                h = h_U # h_U = h_L, and eps is used
+                h = h_U  # h_U = h_L, and eps is used
                 dual_norm = np.float64(1.0) / (1 - 1.0 / norm)
                 if C is not None:
                     center = weight.matmul(h.unsqueeze(-1)) + bias.unsqueeze(-1)
@@ -197,7 +199,7 @@ class BoundLinear(Linear):
                     deviation = diff.matmul(weight_abs.t())
             else:
                 # L2 norm
-                h = h_U # h_U = h_L, and eps is used
+                h = h_U  # h_U = h_L, and eps is used
                 dual_norm = np.float64(1.0) / (1 - 1.0 / norm)
                 if C is not None:
                     center = weight.matmul(h.unsqueeze(-1)) + bias.unsqueeze(-1)
@@ -210,13 +212,13 @@ class BoundLinear(Linear):
             lower = center - deviation
             # output 
             return np.inf, upper, lower, 0, 0, 0, 0
-            
 
 
 class BoundConv2d(Conv2d):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, bound_opts=None):
-        super(BoundConv2d, self).__init__(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, 
-                stride=stride, padding=padding, dilation=dilation, groups=groups, bias=bias)
+    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True,
+                 bound_opts=None):
+        super(BoundConv2d, self).__init__(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
+                                          stride=stride, padding=padding, dilation=dilation, groups=groups, bias=bias)
         self.bound_opts = bound_opts
         self.layer = None
 
@@ -225,15 +227,15 @@ class BoundConv2d(Conv2d):
         if 'SubnetConv' in (str(l.__class__.__name__)):
             # print("subnet conv converted")
             nl = BoundConv2d(l.in_channels,
-                            l.out_channels,
-                            l.kernel_size,
-                            l.stride,
-                            l.padding,
-                            l.dilation,
-                            l.groups,
-                            l.bias is not None,
-                            bound_opts
-                        )
+                             l.out_channels,
+                             l.kernel_size,
+                             l.stride,
+                             l.padding,
+                             l.dilation,
+                             l.groups,
+                             l.bias is not None,
+                             bound_opts
+                             )
 
             nl.layer = l
             adj = GetSubnet.apply(l.popup_scores.abs(), l.k)
@@ -243,15 +245,15 @@ class BoundConv2d(Conv2d):
             return nl
 
         nl = BoundConv2d(l.in_channels,
-                        l.out_channels,
-                        l.kernel_size,
-                        l.stride,
-                        l.padding,
-                        l.dilation,
-                        l.groups,
-                        l.bias is not None,
-                        bound_opts
-                    )
+                         l.out_channels,
+                         l.kernel_size,
+                         l.stride,
+                         l.padding,
+                         l.dilation,
+                         l.groups,
+                         l.bias is not None,
+                         bound_opts
+                         )
         # nl.weight.data.copy_(l.weight.data)
         # nl.bias.data.copy_(l.bias.data)
         nl.weight = l.weight
@@ -264,14 +266,14 @@ class BoundConv2d(Conv2d):
         if 'SubnetConv' in (str(self.layer.__class__.__name__)):
             adj = GetSubnet.apply(self.layer.popup_scores.abs(), self.layer.k)
             self.layer.w = self.layer.weight * adj
-            output = F.conv2d(input, 
-                            self.layer.w,
-                            self.bias,
-                            self.stride,
-                            self.padding,
-                            self.dilation,
-                            self.groups
-                        )
+            output = F.conv2d(input,
+                              self.layer.w,
+                              self.bias,
+                              self.stride,
+                              self.padding,
+                              self.dilation,
+                              self.groups
+                              )
             self.output_shape = output.size()[1:]
             self.input_shape = input.size()[1:]
             return output
@@ -292,39 +294,40 @@ class BoundConv2d(Conv2d):
             shape = last_A.size()
             # propagate A to the next layer, with batch concatenated together
             if compute_A:
-                
+
                 if 'SubnetConv' in (str(self.layer.__class__.__name__)):
                     weight = self.layer.w
                 else:
                     weight = self.weight
 
-                output_padding0 = int(self.input_shape[1]) -\
-                                (int(self.output_shape[1]) - 1) * self.stride[0] +\
-                                2 * self.padding[0] - int(weight.size()[2])
-                output_padding1 = int(self.input_shape[2]) -\
-                                (int(self.output_shape[2]) - 1) * self.stride[1] +\
-                                2 * self.padding[1] - int(weight.size()[3]) 
+                output_padding0 = int(self.input_shape[1]) - \
+                                  (int(self.output_shape[1]) - 1) * self.stride[0] + \
+                                  2 * self.padding[0] - int(weight.size()[2])
+                output_padding1 = int(self.input_shape[2]) - \
+                                  (int(self.output_shape[2]) - 1) * self.stride[1] + \
+                                  2 * self.padding[1] - int(weight.size()[3])
                 next_A = F.conv_transpose2d(last_A.view(shape[0] * shape[1], *shape[2:]),
-                                        weight,
-                                        None,
-                                        stride=self.stride,
-                                        padding=self.padding,
-                                        dilation=self.dilation,
-                                        groups=self.groups,
-                                        output_padding=(output_padding0, output_padding1))
+                                            weight,
+                                            None,
+                                            stride=self.stride,
+                                            padding=self.padding,
+                                            dilation=self.dilation,
+                                            groups=self.groups,
+                                            output_padding=(output_padding0, output_padding1))
                 next_A = next_A.view(shape[0], shape[1], *next_A.shape[1:])
                 logger.debug('next_A %s', next_A.size())
             else:
                 next_A = False
             logger.debug('bias %s', self.bias.size())
             # dot product, compute the bias of this layer, do a dot product
-            sum_bias = (last_A.sum((3,4)) * self.bias).sum(2)
-            logger.debug('sum_bias %s', sum_bias.size()) 
+            sum_bias = (last_A.sum((3, 4)) * self.bias).sum(2)
+            logger.debug('sum_bias %s', sum_bias.size())
             return next_A, sum_bias
+
         # if the slope is the same (Fast-Lin) and both matrices are given, only need to compute one of them
-        if self.bound_opts.get("same-slope", False) and\
-                            (last_uA is not None) and\
-                            (last_lA is not None):
+        if self.bound_opts.get("same-slope", False) and \
+                (last_uA is not None) and \
+                (last_lA is not None):
             uA, ubias = _bound_oneside(last_uA, True)
             _, lbias = _bound_oneside(last_lA, False)
             lA = uA
@@ -347,7 +350,7 @@ class BoundConv2d(Conv2d):
                 mid = h_U
                 # logger.debug('mid %s', mid.size())
                 # TODO: consider padding here?
-                deviation = torch.mul(self.layer.w, self.layer.w).sum((1,2,3)).sqrt() * eps
+                deviation = torch.mul(self.layer.w, self.layer.w).sum((1, 2, 3)).sqrt() * eps
                 # logger.debug('weight %s', self.layer.w.size())
                 # logger.debug('deviation %s', deviation.size())
                 deviation = deviation.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
@@ -368,7 +371,7 @@ class BoundConv2d(Conv2d):
                 mid = h_U
                 logger.debug('mid %s', mid.size())
                 # TODO: consider padding here?
-                deviation = torch.mul(self.weight, self.weight).sum((1,2,3)).sqrt() * eps
+                deviation = torch.mul(self.weight, self.weight).sum((1, 2, 3)).sqrt() * eps
                 logger.debug('weight %s', self.weight.size())
                 logger.debug('deviation %s', deviation.size())
                 deviation = deviation.unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
@@ -378,7 +381,7 @@ class BoundConv2d(Conv2d):
             upper = center + deviation
             lower = center - deviation
             return np.inf, upper, lower, 0, 0, 0, 0
-    
+
 
 class BoundReLU(ReLU):
     def __init__(self, prev_layer, inplace=False, bound_opts=None):
@@ -386,7 +389,7 @@ class BoundReLU(ReLU):
         # ReLU needs the previous layer's bounds
         # self.prev_layer = prev_layer
         self.bound_opts = bound_opts
-    
+
     ## Convert a ReLU layer to BoundReLU layer
     # @param act_layer ReLU layer object
     # @param prev_layer Pre-activation layer, used for get preactivation bounds
@@ -401,13 +404,13 @@ class BoundReLU(ReLU):
         self.unstab = ((h_L < -guard_eps) & (h_U > guard_eps))
         # stored upper and lower bounds will be used for backward bound propagation
         self.upper_u = h_U
-        self.lower_l = h_L 
+        self.lower_l = h_L
         tightness_loss = self.unstab.sum()
         # tightness_loss = torch.min(h_U_unstab * h_U_unstab, h_L_unstab * h_L_unstab).sum()
         return norm, F.relu(h_U), F.relu(h_L), tightness_loss, tightness_loss, \
                (h_U < 0).sum(), (h_L > 0).sum()
 
-    def bound_backward(self, last_uA, last_lA): 
+    def bound_backward(self, last_uA, last_lA):
         lb_r = self.lower_l.clamp(max=0)
         ub_r = self.upper_u.clamp(min=0)
         # avoid division by 0 when both lb_r and ub_r are 0
@@ -445,7 +448,7 @@ class BoundReLU(ReLU):
             if self.bound_opts.get("same-slope", False):
                 lA = uA if uA is not None else lower_d * last_lA
             else:
-                pos_lA = last_lA.clamp(min=0) 
+                pos_lA = last_lA.clamp(min=0)
                 lA = upper_d * neg_lA + lower_d * pos_lA
             mult_lA = neg_lA.view(last_lA.size(0), last_lA.size(1), -1)
             lbias = mult_lA.matmul(upper_b.view(upper_b.size(0), -1, 1)).squeeze(-1)
@@ -454,9 +457,10 @@ class BoundReLU(ReLU):
 
 class BoundSequential(Sequential):
     def __init__(self, *args):
-        super(BoundSequential, self).__init__(*args) 
+        super(BoundSequential, self).__init__(*args)
 
-    ## Convert a Pytorch model to a model with bounds
+        ## Convert a Pytorch model to a model with bounds
+
     # @param sequential_model Input pytorch model
     # @return Converted model
     @staticmethod
@@ -479,7 +483,7 @@ class BoundSequential(Sequential):
 
     ## The __call__ function is overwritten for DataParallel
     def __call__(self, *input, **kwargs):
-        
+
         if "method_opt" in kwargs:
             opt = kwargs["method_opt"]
             kwargs.pop("method_opt")
@@ -491,7 +495,7 @@ class BoundSequential(Sequential):
             return self.full_backward_range(*input, **kwargs)
         elif opt == "backward_range":
             return self.backward_range(*input, **kwargs)
-        elif opt == "interval_range": 
+        elif opt == "interval_range":
             return self.interval_range(*input, **kwargs)
         else:
             return super(BoundSequential, self).__call__(*input, **kwargs)
@@ -524,22 +528,24 @@ class BoundSequential(Sequential):
             # before a ReLU layer
             if isinstance(modules[i], BoundReLU):
                 # we set C as the weight of previous layer
-                if isinstance(modules[i-1], BoundLinear):
+                if isinstance(modules[i - 1], BoundLinear):
                     # add a batch dimension; all images have the same C in this case
-                    newC = modules[i-1].weight.unsqueeze(0)
+                    newC = modules[i - 1].weight.unsqueeze(0)
                     # we skip the layer i, and use CROWN to compute pre-activation bounds
                     # starting from layer i-2 (layer i-1 passed as specification)
-                    ub, _, lb, _ = self.backward_range(norm = norm, x_U = x_U, x_L = x_L, eps = eps, C = newC, upper = True, lower = True, modules = modules[:i-1])
+                    ub, _, lb, _ = self.backward_range(norm=norm, x_U=x_U, x_L=x_L, eps=eps, C=newC, upper=True,
+                                                       lower=True, modules=modules[:i - 1])
                     # add the missing bias term (we propagate newC which do not have bias)
-                    ub += modules[i-1].bias
-                    lb += modules[i-1].bias
-                elif isinstance(modules[i-1], BoundConv2d):
+                    ub += modules[i - 1].bias
+                    lb += modules[i - 1].bias
+                elif isinstance(modules[i - 1], BoundConv2d):
                     # we need to unroll the convolutional layer here
-                    c, h, w = modules[i-1].output_shape
-                    newC = torch.eye(c*h*w, device = x_U.device, dtype = x_U.dtype)
-                    newC = newC.view(1, c*h*w, c, h, w)
+                    c, h, w = modules[i - 1].output_shape
+                    newC = torch.eye(c * h * w, device=x_U.device, dtype=x_U.dtype)
+                    newC = newC.view(1, c * h * w, c, h, w)
                     # use CROWN to compute pre-actiation bounds starting from layer i-1
-                    ub, _, lb, _ = self.backward_range(norm = norm, x_U = x_U, x_L = x_L, eps = eps, C = newC, upper = True, lower = True, modules = modules[:i])
+                    ub, _, lb, _ = self.backward_range(norm=norm, x_U=x_U, x_L=x_L, eps=eps, C=newC, upper=True,
+                                                       lower=True, modules=modules[:i])
                     # reshape to conv output shape; these are pre-activation bounds
                     ub = ub.view(ub.size(0), c, h, w)
                     lb = lb.view(lb.size(0), c, h, w)
@@ -549,8 +555,7 @@ class BoundSequential(Sequential):
                 modules[i].upper_u = ub
                 modules[i].lower_l = lb
         # get the final layer bound with spec C
-        return self.backward_range(norm = norm, x_U = x_U, x_L = x_L, eps = eps, C = C, upper = upper, lower = lower)
-
+        return self.backward_range(norm=norm, x_U=x_U, x_L=x_L, eps=eps, C=C, upper=upper, lower=lower)
 
     ## High level function, will be called outside
     # @param norm perturbation norm (np.inf, 2)
@@ -571,8 +576,9 @@ class BoundSequential(Sequential):
             # squeeze is for using broadcasting in the cast that all examples use the same spec
             upper_sum_b = upper_b + upper_sum_b
             lower_sum_b = lower_b + lower_sum_b
+
         # sign = +1: upper bound, sign = -1: lower bound
-        def _get_concrete_bound(A, sum_b, sign = -1):
+        def _get_concrete_bound(A, sum_b, sign=-1):
             if A is None:
                 return None
             A = A.view(A.size(0), A.size(1), -1)
@@ -595,12 +601,13 @@ class BoundSequential(Sequential):
                 bound = A.bmm(x) + sign * deviation.unsqueeze(-1)
             bound = bound.squeeze(-1) + sum_b
             return bound
-        lb = _get_concrete_bound(lower_A, lower_sum_b, sign = -1)
-        ub = _get_concrete_bound(upper_A, upper_sum_b, sign = +1)
+
+        lb = _get_concrete_bound(lower_A, lower_sum_b, sign=-1)
+        ub = _get_concrete_bound(upper_A, upper_sum_b, sign=+1)
         if ub is None:
             ub = x_U.new([np.inf])
         if lb is None:
-            lb = x_L.new([-np.inf]) 
+            lb = x_L.new([-np.inf])
         return ub, upper_sum_b, lb, lower_sum_b
 
     def interval_range(self, norm=np.inf, x_U=None, x_L=None, eps=None, C=None):
@@ -632,28 +639,29 @@ class BoundDataParallel(DataParallel):
     def __init__(self, *inputs, **kwargs):
         super(BoundDataParallel, self).__init__(*inputs, **kwargs)
         self._replicas = None
+
     # Overide the forward method
     def forward(self, *inputs, **kwargs):
         disable_multi_gpu = False
         if "disable_multi_gpu" in kwargs:
             disable_multi_gpu = kwargs["disable_multi_gpu"]
             kwargs.pop("disable_multi_gpu")
-         
-        if not self.device_ids or disable_multi_gpu: 
+
+        if not self.device_ids or disable_multi_gpu:
             return self.module(*inputs, **kwargs)
-       
+
         # Only replicate during forwarding propagation. Not during interval bounds
         # and CROWN-IBP bounds, since weights have not been updated. This saves 2/3
         # of communication cost.
         if self._replicas is None or kwargs.get("method_opt", "forward") == "forward":
-            self._replicas = self.replicate(self.module, self.device_ids)  
+            self._replicas = self.replicate(self.module, self.device_ids)
 
         for t in chain(self.module.parameters(), self.module.buffers()):
             if t.device != self.src_device_obj:
                 raise RuntimeError("module must have its parameters and buffers "
                                    "on device {} (device_ids[0]) but found one of "
                                    "them on device: {}".format(self.src_device_obj, t.device))
-        inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids) 
+        inputs, kwargs = self.scatter(inputs, kwargs, self.device_ids)
         if len(self.device_ids) == 1:
             return self.module(*inputs[0], **kwargs[0])
         outputs = self.parallel_apply(self._replicas[:len(inputs)], inputs, kwargs)

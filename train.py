@@ -25,13 +25,11 @@ from utils.model import (
     prepare_model,
     initialize_scaled_score,
     scale_rand_init,
-    show_gradients,
     current_model_pruned_fraction,
     snip_init,
 )
 from utils.schedules import get_lr_policy, get_optimizer
 from utils.semisup import get_semisup_dataloader
-
 
 # TODO: update wrn, resnet models. Save both subnet and dense version.
 # TODO: take care of BN, bias in pruning, support structured pruning
@@ -189,7 +187,7 @@ def main():
         if args.evaluate:
             return
 
-    show_gradients(model)
+    # show_gradients(model)
 
     # if args.source_net:
     #     last_ckpt = checkpoint["state_dict"]

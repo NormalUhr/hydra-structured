@@ -1,9 +1,8 @@
 import torch
-import shutil
 import os
 import yaml
 import sys
-import shutil, errno
+import shutil
 from distutils.dir_util import copy_tree
 from utils.model import subnet_to_dense
 
