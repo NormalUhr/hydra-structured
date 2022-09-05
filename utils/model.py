@@ -1,12 +1,12 @@
+import math
+import os
+
+import numpy as np
 import torch
 import torch.nn as nn
-import torchvision
-
-import os
-import math
-import numpy as np
 
 from models.layers import SubnetConv, SubnetLinear
+
 
 # TODO: avoid freezing bn_params
 # Some utils are borrowed from https://github.com/allenai/hidden-networks
@@ -115,7 +115,7 @@ def initialize_scaled_score(model):
             n = nn.init._calculate_correct_fan(m.popup_scores, "fan_in")
             # Close to kaiming unifrom init
             m.popup_scores.data = (
-                math.sqrt(6 / n) * m.weight.data / torch.max(torch.abs(m.weight.data))
+                    math.sqrt(6 / n) * m.weight.data / torch.max(torch.abs(m.weight.data))
             )
 
 
@@ -193,7 +193,7 @@ def subnet_to_dense(subnet_dict, p):
             flat_out[idx[:j]] = 0
             flat_out[idx[j:]] = 1
             dense[k.replace("popup_scores", "weight")] = (
-                subnet_dict[k.replace("popup_scores", "weight")] * out
+                    subnet_dict[k.replace("popup_scores", "weight")] * out
             )
     return dense
 
@@ -243,4 +243,3 @@ def sanity_check_paramter_updates(model, last_ckpt):
                 s1 = getattr(v, "popup_scores").data.cpu()
                 s2 = last_ckpt[i + ".popup_scores"].data.cpu()
             return not torch.allclose(w1, w2), not torch.allclose(s1, s2)
-
