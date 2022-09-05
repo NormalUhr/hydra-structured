@@ -100,7 +100,7 @@ def main():
     model = models.__dict__[args.arch](
         cl, ll, args.init_type, num_classes=args.num_classes
     ).to(device)
-    logger.info(model)
+    # logger.info(model)
 
     # Customize models for training/pruning/fine-tuning
     prepare_model(model, args)
@@ -112,7 +112,7 @@ def main():
     D = data.__dict__[args.dataset](args, normalize=args.normalize)
     train_loader, test_loader = D.data_loaders()
 
-    logger.info(args.dataset, D, len(train_loader.dataset), len(test_loader.dataset))
+    # logger.info(args.dataset, D, len(train_loader.dataset), len(test_loader.dataset))
 
     # Semi-sup dataloader
     if args.is_semisup:
