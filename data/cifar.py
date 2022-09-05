@@ -207,9 +207,12 @@ class CIFAR100:
 
 
 if __name__ == "__main__":
-    idx_file = torch.load("./idx/dino/pred_train", map_location="cpu")
+    idx_file = torch.load("./idx/wrn/pred_test", map_location="cpu")
     print(idx_file.shape)
 
+    for idx in range(5):
+        image_idx = torch.where(idx_file == idx)[0]
+        print(len(image_idx))
     idx = 1
 
     image_idx = torch.where(idx_file == idx)[0]
