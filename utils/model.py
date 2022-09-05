@@ -156,7 +156,7 @@ def prepare_model(model, args):
     elif args.exp_mode == "finetune":
         print(f"#################### Fine-tuning network ####################")
         print(
-            f"===>>  gradient for importance_scores: None  | fine-tuning important weigths only"
+            f"===>>  gradient for importance_scores: None  | fine-tuning important weights only"
         )
         freeze_vars(model, "popup_scores", args.freeze_bn)
         unfreeze_vars(model, "weight")

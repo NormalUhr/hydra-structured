@@ -82,7 +82,7 @@ def parse_args():
     parser.add_argument(
         "--scale_rand_init",
         action="store_true",
-        default=True,
+        default=False,
         help="Init weight with scaling using pruning ratio",
     )
 
@@ -138,7 +138,7 @@ def parse_args():
     # )
 
     parser.add_argument(
-        "--scores_init_type",
+        "--scores-init_type",
         choices=("kaiming_normal", "kaiming_uniform", "xavier_uniform", "xavier_normal"),
         help="Which init to use for relevance scores",
     )
