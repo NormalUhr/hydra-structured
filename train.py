@@ -97,18 +97,9 @@ def main():
 
     # Create model
     cl, ll = get_layers(args.layer_type)
-    if len(gpu_list) > 1:
-        print("Using multiple GPUs")
-        model = nn.DataParallel(
-            models.__dict__[args.arch](
-                cl, ll, args.init_type, num_classes=args.num_classes
-            ),
-            gpu_list,
-        ).to(device)
-    else:
-        model = models.__dict__[args.arch](
-            cl, ll, args.init_type, num_classes=args.num_classes
-        ).to(device)
+    model = models.__dict__[args.arch](
+        cl, ll, args.init_type, num_classes=args.num_classes
+    ).to(device)
     logger.info(model)
 
     # Customize models for training/pruning/fine-tuning
