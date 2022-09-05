@@ -207,15 +207,6 @@ class CIFAR100:
 
 
 if __name__ == "__main__":
-    idx_file = torch.load("./idx/wrn/pred_test", map_location="cpu")
-    print(idx_file.shape)
-
-    for idx in range(5):
-        image_idx = torch.where(idx_file == idx)[0]
-        print(len(image_idx))
-    idx = 1
-
-    image_idx = torch.where(idx_file == idx)[0]
 
     tr_train = [
         transforms.ToTensor(),
@@ -228,8 +219,18 @@ if __name__ == "__main__":
         transform=tr_train,
     )
 
+    idx_file = torch.load("./idx/wrn/pred_train", map_location="cpu")
+    print(idx_file.shape)
+
+    for idx in range(5):
+        image_idx = torch.where(idx_file == idx)[0]
+        print(len(image_idx))
+    idx = 3
+
+    image_idx = torch.where(idx_file == idx)[0]
+
     trainset.data = trainset.data[image_idx]
     trainset.targets = np.array(trainset.targets)[image_idx].tolist()
 
-    print(len(trainset.targets))
+    print(trainset.targets)
     print(len(trainset.data))

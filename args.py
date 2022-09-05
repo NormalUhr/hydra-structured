@@ -62,7 +62,7 @@ def parse_args():
         "--snip-init",
         action="store_true",
         default=False,
-        help="Whether implemnet snip init",
+        help="Whether implement snip init",
     )
 
     parser.add_argument(
@@ -76,7 +76,7 @@ def parse_args():
         "--scaled-score-init",
         action="store_true",
         default=False,
-        help="Init importance scores proportaional to weights (default kaiming init)",
+        help="Init importance scores proportional to weights (default kaiming init)",
     )
 
     parser.add_argument(
@@ -105,7 +105,7 @@ def parse_args():
         "--is-semisup",
         action="store_true",
         default=False,
-        help="Use semisupervised training",
+        help="Use semi-supervised training",
     )
 
     parser.add_argument(
