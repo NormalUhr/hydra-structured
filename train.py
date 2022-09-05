@@ -140,6 +140,7 @@ def main():
             logger.info("=> loaded checkpoint '{}'".format(args.source_net))
         else:
             logger.info("=> no checkpoint found at '{}'".format(args.resume))
+            raise ValueError
 
     # Init scores once source net is loaded.
     # NOTE: scaled_init_scores will overwrite the scores in the pre-trained net.
@@ -179,6 +180,7 @@ def main():
             )
         else:
             logger.info("=> no checkpoint found at '{}'".format(args.resume))
+            raise ValueError
 
     # Evaluate
     if args.evaluate or args.exp_mode in ["prune", "finetune"]:
