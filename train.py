@@ -162,7 +162,7 @@ def main():
 
     best_prec1 = 0
 
-    # resume (if checkpoint provided). Continue training with preiovus settings.
+    # resume (if checkpoint provided). Continue training with previous settings.
     if args.resume:
         if os.path.isfile(args.resume):
             logger.info("=> loading checkpoint '{}'".format(args.resume))
