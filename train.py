@@ -101,7 +101,7 @@ def main():
     logger.info(model)
 
     # Customize models for training/pruning/fine-tuning
-    # prepare_model(model, args)
+    prepare_model(model, args)
 
     # Setup tensorboard writer
     writer = SummaryWriter(os.path.join(result_sub_dir, "tensorboard"))
