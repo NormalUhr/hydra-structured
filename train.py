@@ -140,19 +140,21 @@ def main():
             logger.info("=> no checkpoint found at '{}'".format(args.resume))
             raise ValueError
 
-    # Init scores once source net is loaded.
-    # NOTE: scaled_init_scores will overwrite the scores in the pre-trained net.
-    if args.scaled_score_init:
-        initialize_scaled_score(model)
+    if args.exp_mode == "prune":
 
-    # Scaled random initialization. Useful when training a high sparse net from scratch.
-    # If not used, a sparse net (without batch-norm) from scratch will not coverge.
-    # With batch-norm its not really necessary.
-    elif args.scale_rand_init:
-        scale_rand_init(model, args.k)
+        # Init scores once source net is loaded.
+        # NOTE: scaled_init_scores will overwrite the scores in the pre-trained net.
+        if args.scaled_score_init:
+            initialize_scaled_score(model)
 
-    if args.snip_init:
-        snip_init(model, criterion, optimizer, train_loader, device, args)
+        # Scaled random initialization. Useful when training a high sparse net from scratch.
+        # If not used, a sparse net (without batch-norm) from scratch will not coverge.
+        # With batch-norm its not really necessary.
+        elif args.scale_rand_init:
+            scale_rand_init(model, args.k)
+
+        if args.snip_init:
+            snip_init(model, criterion, optimizer, train_loader, device, args)
 
     assert not (args.source_net and args.resume), (
         "Incorrect setup: "
