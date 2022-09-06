@@ -10,7 +10,7 @@ from utils.adv import trades_loss
 
 # TODO: add adversarial accuracy.
 def train(
-    model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer, step, lr_policy
+    model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer, lr_policy
 ):
     print(
         " ->->->->->->->->->-> One epoch with Adversarial training (TRADES) <-<-<-<-<-<-<-<-<-<-"
@@ -31,8 +31,10 @@ def train(
     end = time.time()
 
     dataloader = train_loader if sm_loader is None else zip(train_loader, sm_loader)
+    step = epoch * len(train_loader)
 
     for i, data in enumerate(dataloader):
+        step += 1
         if sm_loader:
             images, target = (
                 torch.cat([d[0] for d in data], 0).to(device),
