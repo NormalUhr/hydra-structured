@@ -287,7 +287,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--val_method",
+        "--val-method",
         type=str,
         default="base",
         choices=("base", "adv", "mixtrain", "ibp", "smooth", "freeadv"),
