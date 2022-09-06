@@ -208,29 +208,41 @@ class CIFAR100:
 
 if __name__ == "__main__":
 
-    tr_train = [
-        transforms.ToTensor(),
-    ]
+    pretrained_method = "dino"
+
+    train = False
 
     trainset = datasets.CIFAR10(
         root=os.path.join("../../data/", "CIFAR10"),
         train=True,
         download=True,
-        transform=tr_train,
+        transform=transforms.ToTensor(),
     )
 
-    idx_file = torch.load("./idx/wrn/pred_train", map_location="cpu")
+    testset = datasets.CIFAR10(
+        root=os.path.join("../../data/", "CIFAR10"),
+        train=False,
+        download=True,
+        transform=transforms.ToTensor(),
+    )
+
+    idx_file = torch.load(f"./idx/{pretrained_method}/pred_test", map_location="cpu")
     print(idx_file.shape)
 
     for idx in range(5):
         image_idx = torch.where(idx_file == idx)[0]
-        print(len(image_idx))
-    idx = 3
+        print(f"Idx {idx} image number: {len(image_idx)}")
 
-    image_idx = torch.where(idx_file == idx)[0]
+        image_idx = torch.where(idx_file == idx)[0]
 
-    trainset.data = trainset.data[image_idx]
-    trainset.targets = np.array(trainset.targets)[image_idx].tolist()
+        if train:
+            targets_idx = torch.tensor(trainset.targets)[image_idx]
+        else:
+            targets_idx = torch.tensor(testset.targets)[image_idx]
 
-    print(trainset.targets)
-    print(len(trainset.data))
+        stat = []
+        for label in range(10):
+            stat.append((targets_idx == label).int().sum().item())
+        print(f"Idx: {idx} label distribution:")
+        print(stat)
+

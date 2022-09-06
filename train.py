@@ -98,10 +98,10 @@ def main():
     model = models.__dict__[args.arch](
         cl, ll, args.init_type, num_classes=args.num_classes
     ).to(device)
-    # logger.info(model)
+    logger.info(model)
 
     # Customize models for training/pruning/fine-tuning
-    prepare_model(model, args)
+    # prepare_model(model, args)
 
     # Setup tensorboard writer
     writer = SummaryWriter(os.path.join(result_sub_dir, "tensorboard"))
