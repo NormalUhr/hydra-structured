@@ -80,7 +80,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--scale_rand_init",
+        "--scale-rand-init",
         action="store_true",
         default=False,
         help="Init weight with scaling using pruning ratio",
