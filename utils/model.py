@@ -44,7 +44,7 @@ def get_layers(layer_type):
     if layer_type == "dense":
         return nn.Conv2d, nn.Linear
     elif layer_type == "subnet":
-        return SubnetConv, SubnetLinear
+        return SubnetConv, nn.Linear
     else:
         raise ValueError("Incorrect layer type")
 
