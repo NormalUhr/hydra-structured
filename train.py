@@ -108,7 +108,7 @@ def main():
             expert_init_type=args.init_type,
             num_classes=args.num_classes,
             router_checkpoint_path=args.router_checkpoint_path
-        )
+        ).to(device)
     logger.info(model)
 
     # Customize models for training/pruning/fine-tuning
