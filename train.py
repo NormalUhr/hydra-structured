@@ -151,7 +151,7 @@ def main():
             checkpoint = torch.load(args.source_net, map_location=device)
             state_dict = checkpoint["state_dict"]
             if args.exp_modd == "retrain":
-                subnet_to_dense(state_dict)
+                state_dict = subnet_to_dense(state_dict)
             model.load_state_dict(state_dict, strict=False)
             logger.info("=> loaded checkpoint '{}'".format(args.source_net))
         else:
