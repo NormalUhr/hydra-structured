@@ -264,7 +264,7 @@ def main():
         )
 
         logger.info(
-            f"Epoch %d, val-method %s, validation accuracy %.2f, best_prec %.2f,  epoch duration %.2f".format(epoch, args.val_method, prec1, best_prec1, time.time() - start)
+            f'Epoch {epoch}, val-method {args.val_method}, validation accuracy {prec1:.2f}, best_prec {best_prec1:.2f},  epoch duration {time.time() - start:.2f}'
         )
 
         clone_results_to_latest_subdir(
