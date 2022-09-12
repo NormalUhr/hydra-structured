@@ -20,11 +20,11 @@ module load Python/3.8.5
 
 export PATH=$PATH:$HOME/anaconda3/bin
 source activate biprune
-cd ~/bi-level-pruning-global
+cd ~/hydra-structured
 python3 train.py --arch resnet20s --dataset CIFAR10Idx --dataset-idx ${idx} --k ${k} --exp-mode prune --dataset-idx-method wrn --exp-name resnet20s_idx${idx}_wrn_ratio${k}_adv --trainer adv --val-method adv --source-net results/pretrained/resnet20s_adv_pretrain.pth.tar --scaled-score-init --result-dir results
 scontrol show job $SLURM_JOB_ID     ### write job information to output file
 
 # Submission command:
 # idx=0
 # k=0.8
-# sbatch --job-name=resnet20s_CIFAR10_idx${idx}_k${k} --output=log/slurm/resnet20s_CIFAR10_idx${idx}_k${k}.log --export=k=${k},idx=${idx} scripts/resnet20s_CIFAR10Idx_adv_prune.sb
+# sbatch --job-name=resnet20s_CIFAR10_idx${idx}_k${k}_adv_prune --output=log/slurm/resnet20s_CIFAR10_idx${idx}_k${k}_adv_prune.log --export=k=${k},idx=${idx} scripts/resnet20s_CIFAR10Idx_adv_prune.sb
