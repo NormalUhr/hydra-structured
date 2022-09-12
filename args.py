@@ -348,7 +348,6 @@ def parse_args():
         "--router_arch",
         type=str,
         default="vit_small",
-        choices=["vit_small", "resnet50"],
         help="The architecture of the router."
     )
 
