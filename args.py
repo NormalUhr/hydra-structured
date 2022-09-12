@@ -340,7 +340,6 @@ def parse_args():
     # below are added for auto moe
     parser.add_argument(
         "--use_trainable_router",
-        type=bool,
         action="store_true",
         help="Whether to use trainable router.",
     )
