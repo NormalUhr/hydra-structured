@@ -106,7 +106,8 @@ def main():
             expert_arch=args.arch,
             expert_layer_type=args.layer_type,
             expert_init_type=args.init_type,
-            num_classes=args.num_classes
+            num_classes=args.num_classes,
+            router_checkpoint_path=args.router_checkpoint_path
         )
     logger.info(model)
 
