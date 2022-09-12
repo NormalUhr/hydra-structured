@@ -58,6 +58,7 @@ class MoeEnsemble(nn.Module):
         ])
 
     def forward(self, x_expert, x_router=None):
+        # todo: hard routing mode could be optimized.
         x_router = x_expert if x_router is None else x_router
         batch_size = x_expert.shape[0]
         a = self.routing_func(self.router(x_router)).view(batch_size, self.num_experts, 1)
