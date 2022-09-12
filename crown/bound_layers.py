@@ -469,7 +469,7 @@ class BoundSequential(Sequential):
         if isinstance(sequential_model, Sequential):
             seq_model = sequential_model
         else:
-            seq_model = sequential_model.children()
+            seq_model = sequential_model.modules()
         for l in seq_model:
             if isinstance(l, Linear):
                 layers.append(BoundLinear.convert(l, bound_opts))
