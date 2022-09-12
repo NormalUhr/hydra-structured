@@ -32,7 +32,7 @@ val_method: base
 dataset: CIFAR10
 batch_size: 64
 test_batch_size: 128
-data_dir: "./datasets"
+data_dir: "../data"
 data_fraction: 1.0
 
 # ->->->->-> Semi-supervised training <-<-<-<-<-
