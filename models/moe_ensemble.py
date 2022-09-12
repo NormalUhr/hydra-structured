@@ -37,7 +37,7 @@ class MoeEnsemble(nn.Module):
             for name, param in self.router.state_dict():
                 if checkpoint[name].shape != param.shape:
                     checkpoint.pop(name)
-            self.router.load_state_dict(checkpoint["state_dict"], strict=False)
+            self.router.load_state_dict(checkpoint, strict=False)
 
         self.routing_policy = routing_policy
         if self.routing_policy == "hard":
