@@ -50,6 +50,7 @@ class MoeEnsemble(nn.Module):
             raise NotImplementedError
 
         # define the experts
+        self.num_experts = num_experts
         cl, ll = get_layers(expert_layer_type)
         self.experts = nn.ModuleList([
             models.__dict__[expert_arch](cl, ll, expert_init_type, num_classes=num_classes)
@@ -58,6 +59,7 @@ class MoeEnsemble(nn.Module):
 
     def forward(self, x_expert, x_router=None):
         x_router = x_expert if x_router is None else x_router
-        a = self.routing_func(self.router(x_router))
-        b = torch.cat([expert(x_expert) for expert in self.experts], dim=-1)
+        batch_size = x_expert.shape[0]
+        a = self.routing_func(self.router(x_router)).view(batch_size, self.num_experts, 1)
+        b = torch.cat([expert(x_expert).view(batch_size, 1, -1) for expert in self.experts], dim=1)
         return a * b
