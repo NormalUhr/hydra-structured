@@ -37,6 +37,12 @@ def set_prune_rate_model(model, prune_rate):
             v.set_prune_rate(prune_rate)
 
 
+def set_hard_popup(model):
+    for _, v in model.named_modules():
+        if hasattr(v, "set_hard_popup"):
+            v.set_hard_popup()
+
+
 def get_layers(layer_type):
     """
         Returns: (conv_layer, linear_layer)
@@ -158,6 +164,7 @@ def prepare_model(model, args):
         print(
             f"===>>  gradient for importance_scores: None  | fine-tuning important weights only"
         )
+        set_hard_popup(model)
         freeze_vars(model, "popup_scores", args.freeze_bn)
         unfreeze_vars(model, "weight")
         unfreeze_vars(model, "bias")

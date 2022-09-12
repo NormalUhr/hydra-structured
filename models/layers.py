@@ -62,13 +62,20 @@ class SubnetConv(nn.Conv2d):
         if self.bias is not None:
             self.bias.requires_grad = False
         self.w = 0
+        self.hard_popup = False
 
     def set_prune_rate(self, k):
         self.k = k
 
+    def set_hard_popup(self):
+        self.hard_popup = True
+
     def forward(self, x):
-        # Get the subnetwork by sorting the scores.
-        adj = GetSubnet.apply(self.popup_scores.abs(), self.k)
+        if self.hard_popup:
+            adj = self.popup_scores
+        else:
+            # Get the subnetwork by sorting the scores.
+            adj = GetSubnet.apply(self.popup_scores.abs(), self.k)
 
         # Use only the subnetwork in the forward pass.
         self.w = self.weight * adj
@@ -90,14 +97,21 @@ class SubnetLinear(nn.Linear):
         self.weight.requires_grad = False
         self.bias.requires_grad = False
         self.w = 0
+        self.hard_popup = False
         # self.register_buffer('w', None)
 
     def set_prune_rate(self, k):
         self.k = k
 
+    def set_hard_popup(self):
+        self.hard_popup = True
+
     def forward(self, x):
-        # Get the subnetwork by sorting the scores.
-        adj = GetSubnet.apply(self.popup_scores.abs(), self.k)
+        if self.hard_popup:
+            adj = self.popup_scores
+        else:
+            # Get the subnetwork by sorting the scores.
+            adj = GetSubnet.apply(self.popup_scores.abs(), self.k)
 
         # Use only the subnetwork in the forward pass.
         self.w = self.weight * adj
