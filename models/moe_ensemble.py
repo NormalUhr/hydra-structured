@@ -55,7 +55,7 @@ class MoeEnsemble(nn.Module):
         ])
 
     def forward(self, x_expert, x_router=None):
-        x_router = x_expert if x_router else x_router
+        x_router = x_expert if x_router is None else x_router
         a = self.routing_func(self.router(x_router))
         b = torch.cat([expert(x_expert) for expert in self.experts], dim=-1)
         return a * b
