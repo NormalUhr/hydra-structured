@@ -353,4 +353,10 @@ def parse_args():
         help="The architecture of the router."
     )
 
+    parser.add_argument(
+        "--router_checkpoint_path",
+        type=str,
+        help="The checkpoint path to routers."
+    )
+
     return parser.parse_args()
