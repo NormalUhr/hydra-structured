@@ -14,31 +14,33 @@ def get_straight_through_variable(x):
 
 
 class MoeEnsemble(nn.Module):
-    def __init__(self, router_arch, expert_arch, expert_layer_type, expert_init_type, num_classes, num_experts=5,
-                 router_patch_size=8, router_checkpoint_path=None, router_checkpoint_key="teacher",
-                 routing_policy="hard"):
+    def __init__(self, num_classes, expert_arch, router_arch, router_checkpoint_path=None,
+                 num_experts=5, expert_layer_type="subnet", expert_init_type="kaiming_normal",
+                 router_patch_size=8, router_checkpoint_key="teacher", routing_policy="hard",
+                 router_layer_type="subnet", router_init_type="kaiming_normal"):
         super(MoeEnsemble, self).__init__()
 
         # define the router
         if router_arch == 'resnet50':
             self.router = torchvision_models.__dict__['resnet50']()
-            if router_checkpoint_path is None:
-                raise NotImplementedError
+            dino.utils.load_pretrained_weights(
+                self.router, router_checkpoint_path, router_checkpoint_key, router_arch, router_patch_size)
         elif router_arch == 'vit_small':
             self.router = dino.vision_transformer.__dict__[router_arch](
                 patch_size=router_patch_size, num_classes=num_experts)
-            if router_checkpoint_path is None:
-                router_checkpoint_path = './data/dino/dino_deitsmall8_pretrain.pth'
+            dino.utils.load_pretrained_weights(
+                self.router, router_checkpoint_path, router_checkpoint_key, router_arch, router_patch_size)
         else:
-            raise NotImplementedError
-        dino.utils.load_pretrained_weights(
-            self.router, router_checkpoint_path, router_checkpoint_key, router_arch, router_patch_size)
+            cl, ll = get_layers(router_layer_type)
+            self.router = models.__dict__[router_arch](cl, ll, router_init_type, num_classes=num_experts)
+            checkpoint = torch.load(router_checkpoint_path)
+            model.load_state_dict(checkpoint["state_dict"], strict=False)
 
         self.routing_policy = routing_policy
         if self.routing_policy == "hard":
-            self.routing_func = get_straight_through_variable
+            self.routing_func = lambda t: get_straight_through_variable(torch.softmax(t, dim=-1))
         elif self.routing_policy == "soft":
-            self.routing_func = lambda t: t
+            self.routing_func = lambda t: torch.softmax(t, dim=-1)
         else:
             raise NotImplementedError
 
