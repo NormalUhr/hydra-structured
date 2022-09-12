@@ -347,7 +347,7 @@ def parse_args():
     parser.add_argument(
         "--router_arch",
         type=str,
-        default="vit_small",
+        default="resnet18",
         help="The architecture of the router."
     )
 
