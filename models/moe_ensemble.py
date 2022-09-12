@@ -34,7 +34,7 @@ class MoeEnsemble(nn.Module):
             cl, ll = get_layers(router_layer_type)
             self.router = models.__dict__[router_arch](cl, ll, router_init_type, num_classes=num_experts)
             checkpoint = torch.load(router_checkpoint_path)["state_dict"]
-            for name, param in self.router.state_dict():
+            for name, param in self.router.state_dict().items():
                 if checkpoint[name].shape != param.shape:
                     checkpoint.pop(name)
             self.router.load_state_dict(checkpoint, strict=False)
