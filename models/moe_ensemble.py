@@ -4,6 +4,7 @@ import models
 import data.dino as dino
 from utils.model import get_layers
 from torchvision import models as torchvision_models
+from utils.model import set_prune_rate_model
 
 
 def get_straight_through_variable(x):
