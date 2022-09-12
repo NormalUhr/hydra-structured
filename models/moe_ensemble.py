@@ -9,7 +9,7 @@ from torchvision import models as torchvision_models
 def get_straight_through_variable(x):
     assert len(x.shape) == 2
     index = x.max(1, keepdim=True)[1]
-    x_hard = torch.zeros_like(x, memory_format=torch.legacy_contiguous_format).scatter_(1, index, 1.0)
+    x_hard = torch.zeros_like(x, memory_format=torch.legacy_contiguous_format).scatter_(1, index, 1.0).to(x.device)
     return x_hard - x.detach() + x
 
 
