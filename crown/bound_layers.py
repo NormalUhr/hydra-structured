@@ -469,16 +469,19 @@ class BoundSequential(Sequential):
         if isinstance(sequential_model, Sequential):
             seq_model = sequential_model
         else:
-            seq_model = sequential_model.module
+            seq_model = sequential_model.children()
         for l in seq_model:
             if isinstance(l, Linear):
                 layers.append(BoundLinear.convert(l, bound_opts))
-            if isinstance(l, Conv2d):
+            elif isinstance(l, Conv2d):
                 layers.append(BoundConv2d.convert(l, bound_opts))
-            if isinstance(l, ReLU):
+            elif isinstance(l, ReLU):
                 layers.append(BoundReLU.convert(l, layers[-1], bound_opts))
-            if isinstance(l, Flatten):
+            elif isinstance(l, Flatten):
                 layers.append(BoundFlatten(bound_opts))
+            else:
+                print(l)
+                raise NotImplementedError
         return BoundSequential(*layers)
 
     ## The __call__ function is overwritten for DataParallel
