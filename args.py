@@ -337,4 +337,24 @@ def parse_args():
         help="Number of samples out of a batch to train with sym in mixtrain.",
     )
 
+    # below are added for auto moe
+    parser.add_argument(
+        "--use_trainable_router",
+        action="store_true",
+        help="Whether to use trainable router.",
+    )
+
+    parser.add_argument(
+        "--router_arch",
+        type=str,
+        default="resnet18",
+        help="The architecture of the router."
+    )
+
+    parser.add_argument(
+        "--router_checkpoint_path",
+        type=str,
+        help="The checkpoint path to routers."
+    )
+
     return parser.parse_args()

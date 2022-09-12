@@ -14,6 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 import data
 import models
 from args import parse_args
+from models.moe_ensemble import MoeEnsemble
 from utils.logging import (
     save_checkpoint,
     create_subdirs,
@@ -94,14 +95,28 @@ def main():
     device = torch.device(f"cuda:{gpu_list[0]}" if use_cuda else "cpu")
 
     # Create model
-    cl, ll = get_layers(args.layer_type)
-    model = models.__dict__[args.arch](
-        cl, ll, args.init_type, num_classes=args.num_classes
-    ).to(device)
+    if not args.use_trainable_router:
+        cl, ll = get_layers(args.layer_type)
+        model = models.__dict__[args.arch](
+            cl, ll, args.init_type, num_classes=args.num_classes
+        ).to(device)
+    else:
+        model = MoeEnsemble(
+            router_arch=args.router_arch,
+            expert_arch=args.arch,
+            expert_layer_type=args.layer_type,
+            expert_init_type=args.init_type,
+            num_classes=args.num_classes,
+            router_checkpoint_path=args.router_checkpoint_path
+        ).to(device)
     logger.info(model)
 
     # Customize models for training/pruning/fine-tuning
-    prepare_model(model, args)
+    if not args.use_trainable_router:
+        prepare_model(model, args)
+    else:
+        for m in model.experts:
+            prepare_model(m, args)
 
     # Setup tensorboard writer
     writer = SummaryWriter(os.path.join(result_sub_dir, "tensorboard"))
@@ -145,16 +160,27 @@ def main():
         # Init scores once source net is loaded.
         # NOTE: scaled_init_scores will overwrite the scores in the pre-trained net.
         if args.scaled_score_init:
-            initialize_scaled_score(model)
+            if not args.use_trainable_router:
+                initialize_scaled_score(model)
+            else:
+                for m in model.experts:
+                    initialize_scaled_score(m)
 
         # Scaled random initialization. Useful when training a high sparse net from scratch.
         # If not used, a sparse net (without batch-norm) from scratch will not coverge.
         # With batch-norm its not really necessary.
         elif args.scale_rand_init:
-            scale_rand_init(model, args.k)
+            if not args.use_trainable_router:
+                scale_rand_init(model, args.k)
+            else:
+                for m in model.experts:
+                    scale_rand_init(m, args.k)
 
         if args.snip_init:
-            snip_init(model, criterion, optimizer, train_loader, device, args)
+            if not args.use_trainable_router:
+                snip_init(model, criterion, optimizer, train_loader, device, args)
+            else:
+                raise NotImplementedError
 
     assert not (args.source_net and args.resume), (
         "Incorrect setup: "
