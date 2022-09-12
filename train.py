@@ -149,7 +149,10 @@ def main():
         if os.path.isfile(args.source_net):
             logger.info("=> loading source model from '{}'".format(args.source_net))
             checkpoint = torch.load(args.source_net, map_location=device)
-            model.load_state_dict(checkpoint["state_dict"], strict=False)
+            state_dict = checkpoint["state_dict"]
+            if args.exp_modd == "retrain":
+                subnet_to_dense(state_dict)
+            model.load_state_dict(state_dict, strict=False)
             logger.info("=> loaded checkpoint '{}'".format(args.source_net))
         else:
             logger.info("=> no checkpoint found at '{}'".format(args.resume))
