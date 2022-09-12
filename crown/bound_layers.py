@@ -479,9 +479,6 @@ class BoundSequential(Sequential):
                 layers.append(BoundReLU.convert(l, layers[-1], bound_opts))
             elif isinstance(l, Flatten):
                 layers.append(BoundFlatten(bound_opts))
-            else:
-                print(l)
-                raise NotImplementedError
         return BoundSequential(*layers)
 
     ## The __call__ function is overwritten for DataParallel
