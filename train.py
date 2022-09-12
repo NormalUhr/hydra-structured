@@ -4,6 +4,7 @@ from __future__ import print_function
 import importlib
 import logging
 import os
+import time
 from pathlib import Path
 
 import numpy as np
@@ -215,17 +216,10 @@ def main():
         if args.evaluate:
             return
 
-    # show_gradients(model)
-
-    # if args.source_net:
-    #     last_ckpt = checkpoint["state_dict"]
-    # else:
-    #     last_ckpt = copy.deepcopy(model.state_dict())
-
     # Start training
     for epoch in range(args.start_epoch, args.epochs + args.warmup_epochs):
-        # change this per epoch lr adjuster to per step
-        # lr_policy(epoch)  # adjust learning rate
+
+        start = time.time()
 
         # train
         trainer(
@@ -272,25 +266,12 @@ def main():
         logger.info(
             f"Epoch {epoch}, val-method {args.val_method}, validation accuracy {prec1}, best_prec {best_prec1}"
         )
-        # if args.exp_mode in ["prune", "finetune"]:
-        #     logger.info(
-        #         "Pruned model: {:.2f}%".format(
-        #             current_model_pruned_fraction(
-        #                 model, os.path.join(result_sub_dir, "checkpoint"), verbose=False
-        #             )
-        #         )
-        #     )
-        # clone results to latest subdir (sync after every epoch)
-        # Latest_subdir: stores results from latest run of an experiment.
+
         clone_results_to_latest_subdir(
             result_sub_dir, os.path.join(result_main_dir, "latest_exp")
         )
 
-        # # Check what parameters got updated in the current epoch.
-        # sw, ss = sanity_check_paramter_updates(model, last_ckpt)
-        # logger.info(
-        #     f"Sanity check (exp-mode: {args.exp_mode}): Weight update - {sw}, Scores update - {ss}"
-        # )
+        print("This epoch duration :{}".format(time.time() - start))
 
     current_model_pruned_fraction(
         model, os.path.join(result_sub_dir, "checkpoint"), verbose=True
