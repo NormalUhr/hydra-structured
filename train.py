@@ -264,14 +264,12 @@ def main():
         )
 
         logger.info(
-            f"Epoch {epoch}, val-method {args.val_method}, validation accuracy {prec1}, best_prec {best_prec1}"
+            f"Epoch %d, val-method %s, validation accuracy %.2f, best_prec %.2f,  epoch duration %.2f".format(epoch, args.val_method, prec1, best_prec1, time.time() - start)
         )
 
         clone_results_to_latest_subdir(
             result_sub_dir, os.path.join(result_main_dir, "latest_exp")
         )
-
-        print("This epoch duration :{}".format(time.time() - start))
 
     current_model_pruned_fraction(
         model, os.path.join(result_sub_dir, "checkpoint"), verbose=True
