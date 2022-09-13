@@ -58,10 +58,10 @@ parser.add_argument('--n_init', type=int, default=10)
 
 args = parser.parse_args()
 
-save_path = '/gdata2/cairs/temp/dino'
+save_path = '../idx/%s' % args.arch
 
 if args.arch == 'resnet50':
-    path = '/gdata2/cairs/temp/dino_resnet50_pretrain.pth'
+    path = './dino_resnet50_pretrain.pth'
     model = torchvision_models.__dict__['resnet50']()
     utils.load_pretrained_weights(model, path, args.checkpoint_key, args.arch, args.patch_size)
     val_transform = transforms.Compose([
@@ -72,7 +72,7 @@ if args.arch == 'resnet50':
     ])
 
 elif args.arch == 'vit_small':
-    path = '/gdata2/cairs/temp/dino/dino_deitsmall8_pretrain.pth'
+    path = './dino_deitsmall8_pretrain.pth'
     model = vits.__dict__[args.arch](patch_size=args.patch_size, num_classes=0)
     embed_dim = model.embed_dim * (args.n_last_blocks + int(args.avgpool_patchtokens))
     N_dim = 384
