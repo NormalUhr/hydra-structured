@@ -18,6 +18,7 @@ import torch.nn as nn
 sys.path.append("../..")
 from models import resnet18
 from models.layers import SubnetConv, SubnetLinear
+from utils.model import set_prune_rate_model
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10', 'cifar100'])
@@ -80,6 +81,7 @@ elif args.arch == 'vit_small':
 elif args.arch == "resnet18":
     path = "../../results/resnet18/resnet18_adv_pretrain/pretrain/latest_exp/checkpoint/model_best.pth.tar"
     model = resnet18(SubnetConv, nn.Linear, init_type="kaiming_normal", num_classes=0)
+    set_prune_rate_model(model, 1.0)
     N_dim = 512
     val_transform = transforms.Compose([
         transforms.ToTensor(),
