@@ -24,11 +24,12 @@ parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10'
 parser.add_argument('--n_last_blocks', default=4, type=int, help="""Concatenate [CLS] tokens
         for the `n` last blocks. We use `n=4` when evaluating ViT-Small and `n=1` with ViT-Base.""")
 parser.add_argument('--avgpool_patchtokens', default=False, type=utils.bool_flag,
-    help="""Whether ot not to concatenate the global average pooled features to the [CLS] token.
+                    help="""Whether ot not to concatenate the global average pooled features to the [CLS] token.
     We typically set this to False for ViT-Small and to True with ViT-Base.""")
 parser.add_argument('--arch', default='vit_small', type=str, help='Architecture')
 parser.add_argument('--patch_size', default=8, type=int, help='Patch resolution of the model.')
-parser.add_argument("--checkpoint_key", default="teacher", type=str, help='Key to use in the checkpoint (example: "teacher")')
+parser.add_argument("--checkpoint_key", default="teacher", type=str,
+                    help='Key to use in the checkpoint (example: "teacher")')
 parser.add_argument('--epochs', default=100, type=int, help='Number of epochs of training.')
 parser.add_argument("--lr", default=0.001, type=float, help="""Learning rate at the beginning of
     training (highest LR used during training). The learning rate is linearly scaled
@@ -92,10 +93,14 @@ elif args.arch == "resnet18":
 model.cuda()
 model.eval()
 
-trainset = torchvision.datasets.CIFAR10(root=args.data+args.dataset, train=True, download=True, transform=val_transform)
-train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=False, num_workers=5, pin_memory=True)
-testset = torchvision.datasets.CIFAR10(root=args.data+args.dataset, train=False, download=True, transform=val_transform)
-test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=5, pin_memory=True)
+trainset = torchvision.datasets.CIFAR10(root=args.data + args.dataset, train=True, download=True,
+                                        transform=val_transform)
+train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=False, num_workers=5,
+                                           pin_memory=True)
+testset = torchvision.datasets.CIFAR10(root=args.data + args.dataset, train=False, download=True,
+                                       transform=val_transform)
+test_loader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=5,
+                                          pin_memory=True)
 
 
 def get_features(model, data_loader, mode):
@@ -108,17 +113,18 @@ def get_features(model, data_loader, mode):
             print(i)
 
             start = i * args.batch_size
-            end = min((i+1)*args.batch_size, N)
+            end = min((i + 1) * args.batch_size, N)
             features_all[start:end, ...] = features
-    torch.save(features_all, os.path.join(save_path, '%s_features_%s'%(mode, args.arch)))
+    torch.save(features_all, os.path.join(save_path, '%s_features_%s' % (mode, args.arch)))
     return features_all
+
 
 # clean_train = get_features(model, train_loader, 'clean_train')
 # print('finish saving')
 clean_test = get_features(model, test_loader, 'clean_test')
 # print('finish saving')
 
-clean_train = torch.load(os.path.join(save_path, '%s_features_%s'%('clean_train', args.arch)))
+clean_train = torch.load(os.path.join(save_path, '%s_features_%s' % ('clean_train', args.arch)))
 # clean_test = torch.load(os.path.join(save_path, '%s_features_%s'%('clean_test', args.arch)))
 
 # args.adv_folder = '/gdata2/cairs/DeepMoE_robustness/hash_moe/base_model_step1/cifar10_std/adv_images'
@@ -149,7 +155,7 @@ for cluster_num in [5]:
     kmeans = KMeans(n_clusters=cluster_num, random_state=0, max_iter=args.max_iter, n_init=args.n_init)
     kmeans.fit(embedding)
     centroids = torch.tensor(kmeans.cluster_centers_)
-    torch.save(centroids, os.path.join(save_path, '%s_centroids_num_%d'%(args.arch, cluster_num)))
+    torch.save(centroids, os.path.join(save_path, '%s_centroids_num_%d' % (args.arch, cluster_num)))
 
     # tsne(torch.cat([clean_test[0:N_use], adv_test[0:N_use], centroids.float()], dim=0), labels[0:N_use], 
     #     save_path, N_use, name='test_%d_%s'%(cluster_num, args.arch))
