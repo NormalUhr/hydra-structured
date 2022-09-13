@@ -161,6 +161,7 @@ def parse_args():
     parser.add_argument(
         "--dataset-idx-method",
         type=str,
+        default=None,
         choices=["dino", "wrn"],
         help="What method to generalize the cluster"
     )
