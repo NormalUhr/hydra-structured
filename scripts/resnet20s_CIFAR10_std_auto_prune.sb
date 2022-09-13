@@ -2,7 +2,7 @@
 ########### SBATCH Lines for Resource Request ##########
 
 
-#SBATCH --time=2:00:00            # limit of wall clock time - how long the job will run (same as -t)
+#SBATCH --time=2:20:00            # limit of wall clock time - how long the job will run (same as -t)
 #SBATCH --exclude=lac-143
 #SBATCH --nodes=1                 # number of different nodes - could be an exact number or a range of nodes (same as -N)
 #SBATCH --ntasks=1                  # number of tasks - how many tasks (nodes) that you require (same as -n)
@@ -21,7 +21,7 @@ module load Python/3.8.5
 export PATH=$PATH:$HOME/anaconda3/bin
 source activate biprune
 cd ~/hydra-structured
-python3 train.py --arch resnet20s --dataset CIFAR10 --k ${k} --exp-mode prune --exp-name resnet20s_ratio${k}_std_auto --trainer std --val-method std --source-net results/pretrained/resnet20s_pretrain.pth.tar --scaled-score-init --result-dir results --use_trainable_router --router_checkpoint_path results_new/resnet20s_adv_pretrain.pth.tar --router_arch resnet20s
+python3 train.py --arch resnet20s --dataset CIFAR10 --k ${k} --exp-mode prune --exp-name resnet20s_ratio${k}_std_auto --trainer base --val-method base --source-net results/pretrained/resnet20s_pretrain.pth.tar --scaled-score-init --result-dir results --use_trainable_router --router_checkpoint_path results/pretrained/resnet20s_adv_pretrain.pth.tar --router_arch resnet20s
 scontrol show job $SLURM_JOB_ID     ### write job information to output file
 
 # Submission command:
