@@ -88,7 +88,7 @@ elif args.arch == "resnet18":
     for name, param in self.router.state_dict().items():
         if checkpoint[name].shape != param.shape:
             checkpoint.pop(name)
-    self.router.load_state_dict(checkpoint, strict=False)
+    model.load_state_dict(checkpoint, strict=False)
 
 else:
     raise NotImplementedError
