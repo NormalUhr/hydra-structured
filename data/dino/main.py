@@ -16,7 +16,7 @@ from sklearn.cluster import KMeans
 import torch.nn as nn
 
 sys.path.append("../..")
-from models import ResNet18
+from models import resnet18
 from models.layers import SubnetConv, SubnetLinear
 
 parser = argparse.ArgumentParser()
@@ -79,7 +79,7 @@ elif args.arch == 'vit_small':
 
 elif args.arch == "resnet18":
     path = "../../results/resnet18/resnet18_adv_pretrain/pretrain/latest_exp/checkpoint/model_best.pth.tar"
-    model = ResNet18(SubnetConv, nn.Linear, init_type="kaiming_normal", num_classes=0)
+    model = resnet18(SubnetConv, nn.Linear, init_type="kaiming_normal", num_classes=0)
     N_dim = 512
     val_transform = transforms.Compose([
         transforms.ToTensor(),
