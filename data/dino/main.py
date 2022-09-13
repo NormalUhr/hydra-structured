@@ -86,7 +86,7 @@ elif args.arch == "resnet18":
         transforms.Normalize((0.491, 0.482, 0.447), (0.247, 0.243, 0.262)),
     ])
     checkpoint = torch.load(path)["state_dict"]
-    for name, param in self.router.state_dict().items():
+    for name, param in model.state_dict().items():
         if checkpoint[name].shape != param.shape:
             checkpoint.pop(name)
     model.load_state_dict(checkpoint, strict=False)
