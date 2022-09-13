@@ -133,12 +133,12 @@ def get_features(model, data_loader, mode):
     return features_all
 
 
-# clean_train = get_features(model, train_loader, 'clean_train')
-# print('finish saving')
+clean_train = get_features(model, train_loader, 'clean_train')
+print('finish saving')
 clean_test = get_features(model, test_loader, 'clean_test')
-# print('finish saving')
+print('finish saving')
 
-clean_train = torch.load(os.path.join(save_path, '%s_features_%s' % ('clean_train', args.arch)))
+# clean_train = torch.load(os.path.join(save_path, '%s_features_%s' % ('clean_train', args.arch)))
 # clean_test = torch.load(os.path.join(save_path, '%s_features_%s'%('clean_test', args.arch)))
 
 # args.adv_folder = '/gdata2/cairs/DeepMoE_robustness/hash_moe/base_model_step1/cifar10_std/adv_images'
