@@ -13,6 +13,7 @@ import torchvision.transforms as transforms
 import vision_transformer as vits
 import utils
 from sklearn.cluster import KMeans
+import torch.nn as nn
 
 sys.path.append("../..")
 from models import ResNet18
