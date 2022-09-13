@@ -59,6 +59,8 @@ parser.add_argument('--n_init', type=int, default=10)
 args = parser.parse_args()
 
 save_path = '../idx/%s' % args.arch
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
 
 if args.arch == 'resnet50':
     path = './dino_resnet50_pretrain.pth'
