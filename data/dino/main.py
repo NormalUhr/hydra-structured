@@ -18,7 +18,13 @@ import torch.nn as nn
 sys.path.append("../..")
 from models import resnet18
 from models.layers import SubnetConv, SubnetLinear
-from utils.model import set_prune_rate_model
+
+
+def set_prune_rate_model(model, prune_rate):
+    for _, v in model.named_modules():
+        if hasattr(v, "set_prune_rate"):
+            v.set_prune_rate(prune_rate)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10', 'cifar100'])
