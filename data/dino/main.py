@@ -14,6 +14,10 @@ import vision_transformer as vits
 import utils
 from sklearn.cluster import KMeans
 
+sys.path.append("../..")
+from models import ResNet18
+from models.layers import SubnetConv, SubnetLinear
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', default='cifar10', type=str, choices=['cifar10', 'cifar100'])
 
@@ -50,23 +54,43 @@ save_path = '/gdata2/cairs/temp/dino'
 if args.arch == 'resnet50':
     path = '/gdata2/cairs/temp/dino_resnet50_pretrain.pth'
     model = torchvision_models.__dict__['resnet50']()
+    utils.load_pretrained_weights(model, path, args.checkpoint_key, args.arch, args.patch_size)
+    val_transform = transforms.Compose([
+        transforms.Resize(256, interpolation=3),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+    ])
 
 elif args.arch == 'vit_small':
     path = '/gdata2/cairs/temp/dino/dino_deitsmall8_pretrain.pth'
     model = vits.__dict__[args.arch](patch_size=args.patch_size, num_classes=0)
     embed_dim = model.embed_dim * (args.n_last_blocks + int(args.avgpool_patchtokens))
     N_dim = 384
-
-model.cuda()
-model.eval()
-utils.load_pretrained_weights(model, path, args.checkpoint_key, args.arch, args.patch_size)
-
-val_transform = transforms.Compose([
+    utils.load_pretrained_weights(model, path, args.checkpoint_key, args.arch, args.patch_size)
+    val_transform = transforms.Compose([
         transforms.Resize(256, interpolation=3),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
+
+elif args.arch == "resnet18":
+    path = "../../results/resnet18/resnet18_adv_pretrain/pretrain/latest_exp/checkpoint/model_best.pth.tar"
+    model = ResNet18(SubnetConv, nn.Linear, init_type="kaiming_normal", num_classes=0)
+    N_dim = 512
+    val_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.491, 0.482, 0.447), (0.247, 0.243, 0.262)),
+    ])
+    checkpoint = torch.load(path)["state_dict"]
+    for name, param in self.router.state_dict().items():
+        if checkpoint[name].shape != param.shape:
+            checkpoint.pop(name)
+    self.router.load_state_dict(checkpoint, strict=False)
+
+model.cuda()
+model.eval()
 
 trainset = torchvision.datasets.CIFAR10(root=args.data+args.dataset, train=True, download=True, transform=val_transform)
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=False, num_workers=5, pin_memory=True)
@@ -126,7 +150,7 @@ for cluster_num in [5]:
     kmeans.fit(embedding)
     centroids = torch.tensor(kmeans.cluster_centers_)
     torch.save(centroids, os.path.join(save_path, '%s_centroids_num_%d'%(args.arch, cluster_num)))
-    
+
     # tsne(torch.cat([clean_test[0:N_use], adv_test[0:N_use], centroids.float()], dim=0), labels[0:N_use], 
     #     save_path, N_use, name='test_%d_%s'%(cluster_num, args.arch))
 
