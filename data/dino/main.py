@@ -90,6 +90,9 @@ elif args.arch == "resnet18":
             checkpoint.pop(name)
     self.router.load_state_dict(checkpoint, strict=False)
 
+else:
+    raise NotImplementedError
+
 model.cuda()
 model.eval()
 
