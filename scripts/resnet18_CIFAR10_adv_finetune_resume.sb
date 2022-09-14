@@ -21,9 +21,9 @@ module load Python/3.8.5
 export PATH=$PATH:$HOME/anaconda3/bin
 source activate biprune
 cd ~/hydra-structured
-python3 train.py --arch resnet18 --dataset CIFAR10 --k ${k} --exp-mode prune --exp-name resnet18_ratio${k}_adv --trainer adv --val-method adv --source-net results/pretrained/resnet18_adv_pretrain.pth.tar --scaled-score-init --result-dir results
+python3 train.py --arch resnet18 --dataset CIFAR10 --k ${k} --exp-mode finetune --exp-name resnet18_ratio${k}_adv --trainer adv --val-method adv --resume results/resnet18/resnet18_ratio${k}_adv/finetune/latest_exp/checkpoint/checkpoint.pth.tar --result-dir results
 scontrol show job $SLURM_JOB_ID     ### write job information to output file
 
 # Submission command:
 # k=0.8
-# sbatch --job-name=resnet18_CIFAR10_k${k}_prune --output=log/slurm/resnet18_CIFAR10_k${k}_prune.log --export=k=${k} scripts/resnet18_CIFAR10_adv_prune.sb
+# sbatch --job-name=resnet18_CIFAR10_k${k}_adv_finetune_resume --output=log/slurm/resnet18_CIFAR10_k${k}_adv_finetune_resume.log --export=k=${k} scripts/resnet18_CIFAR10_adv_finetune_resume.sb
