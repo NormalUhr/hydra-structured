@@ -21,9 +21,9 @@ module load Python/3.8.5
 export PATH=$PATH:$HOME/anaconda3/bin
 source activate biprune
 cd ~/hydra-structured
-python3 train.py --arch resnet20s --dataset CIFAR10 --k ${k} --exp-mode prune --exp-name resnet20s_ratio${k}_adv_auto --trainer adv --val-method adv --source-net results/pretrained/resnet20s_adv_pretrain.pth.tar --scaled-score-init --result-dir results --use_trainable_router --router_checkpoint_path results/pretrained/resnet20s_adv_pretrain.pth.tar --router_arch resnet20s
+python3 train.py --arch resnet20s --dataset CIFAR10 --k ${k} --exp-mode prune --exp-name resnet20s_ratio${k}_adv_auto --trainer adv --val-method adv --resume results/resnet20s/resnet20s_ratio${k}_adv_auto/prune/latest_exp/checkpoint/checkpoint.pth.tar --scaled-score-init --result-dir results --use_trainable_router --router_checkpoint_path results/pretrained/resnet20s_adv_pretrain.pth.tar --router_arch resnet20s
 scontrol show job $SLURM_JOB_ID     ### write job information to output file
 
 # Submission command:
 # k=0.8
-# sbatch --job-name=resnet20s_CIFAR10_k${k}_auto_adv_prune --output=log/slurm/resnet20s_CIFAR10_k${k}_auto_adv_prune.log --export=k=${k} scripts/resnet20s_CIFAR10_auto_adv_prune.sb
+# sbatch --job-name=resnet20s_CIFAR10_k${k}_auto_adv_prune_resume --output=log/slurm/resnet20s_CIFAR10_k${k}_auto_adv_prune_resume.log --export=k=${k} scripts/resnet20s_CIFAR10_auto_adv_prune_resume.sb
