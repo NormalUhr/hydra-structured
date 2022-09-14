@@ -157,7 +157,7 @@ def main():
                 model.load_state_dict(checkpoint["state_dict"], strict=False)
             logger.info("=> loaded checkpoint '{}'".format(args.source_net))
         else:
-            logger.info("=> no checkpoint found at '{}'".format(args.resume))
+            logger.info("=> no checkpoint found at '{}'".format(args.source_net))
             raise ValueError
 
     if args.exp_mode == "prune":
