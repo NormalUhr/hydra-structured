@@ -49,6 +49,7 @@ class MoeEnsemble(nn.Module):
             self.routing_func = lambda t: get_straight_through_variable(torch.softmax(t, dim=-1))
         elif self.routing_policy == "soft":
             self.routing_func = lambda t: torch.softmax(t, dim=-1)
+            raise NotImplementedError  # should act differently during training and evaluation
         else:
             raise NotImplementedError
 
