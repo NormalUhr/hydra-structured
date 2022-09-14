@@ -110,7 +110,7 @@ def main():
             num_classes=args.num_classes,
             router_checkpoint_path=args.router_checkpoint_path
         ).to(device)
-    logger.info(model)
+    # logger.info(model)
 
     # Customize models for training/pruning/fine-tuning
     if not args.use_trainable_router:
