@@ -150,7 +150,11 @@ def main():
         if os.path.isfile(args.source_net):
             logger.info("=> loading source model from '{}'".format(args.source_net))
             checkpoint = torch.load(args.source_net, map_location=device)
-            model.load_state_dict(checkpoint["state_dict"], strict=False)
+            if args.use_trainable_router and args.exp_mode == "prune":
+                for expert in model.experts:
+                    expert.load_state_dict(checkpoint["state_dict"], strict=False)
+            else:
+                model.load_state_dict(checkpoint["state_dict"], strict=False)
             logger.info("=> loaded checkpoint '{}'".format(args.source_net))
         else:
             logger.info("=> no checkpoint found at '{}'".format(args.resume))

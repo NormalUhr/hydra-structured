@@ -24,22 +24,25 @@ class MoeEnsemble(nn.Module):
         # define the router
         if router_arch == 'resnet50':
             self.router = torchvision_models.__dict__['resnet50']()
-            dino.utils.load_pretrained_weights(
-                self.router, router_checkpoint_path, router_checkpoint_key, router_arch, router_patch_size)
+            if router_checkpoint_path is not None:
+                dino.utils.load_pretrained_weights(
+                    self.router, router_checkpoint_path, router_checkpoint_key, router_arch, router_patch_size)
         elif router_arch == 'vit_small':
             self.router = dino.vision_transformer.__dict__[router_arch](
                 patch_size=router_patch_size, num_classes=num_experts)
-            dino.utils.load_pretrained_weights(
-                self.router, router_checkpoint_path, router_checkpoint_key, router_arch, router_patch_size)
+            if router_checkpoint_path is not None:
+                dino.utils.load_pretrained_weights(
+                    self.router, router_checkpoint_path, router_checkpoint_key, router_arch, router_patch_size)
         else:
             cl, ll = get_layers(router_layer_type)
             self.router = models.__dict__[router_arch](cl, ll, router_init_type, num_classes=num_experts)
             set_prune_rate_model(self.router, 1.0)
-            checkpoint = torch.load(router_checkpoint_path)["state_dict"]
-            for name, param in self.router.state_dict().items():
-                if checkpoint[name].shape != param.shape:
-                    checkpoint.pop(name)
-            self.router.load_state_dict(checkpoint, strict=False)
+            if router_checkpoint_path is not None:
+                checkpoint = torch.load(router_checkpoint_path)["state_dict"]
+                for name, param in self.router.state_dict().items():
+                    if checkpoint[name].shape != param.shape:
+                        checkpoint.pop(name)
+                self.router.load_state_dict(checkpoint, strict=False)
 
         self.routing_policy = routing_policy
         if self.routing_policy == "hard":
