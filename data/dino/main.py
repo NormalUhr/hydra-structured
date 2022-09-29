@@ -16,7 +16,7 @@ from sklearn.cluster import KMeans
 import torch.nn as nn
 
 sys.path.append("../..")
-from models import resnet18
+from models import resnet18, resnet20s
 from models.layers import SubnetConv, SubnetLinear
 
 
@@ -89,6 +89,21 @@ elif args.arch == 'vit_small':
 elif args.arch == "resnet18":
     path = "../../results/resnet18/resnet18_adv_pretrain/pretrain/latest_exp/checkpoint/model_best.pth.tar"
     model = resnet18(SubnetConv, nn.Linear, init_type="kaiming_normal", num_classes=0)
+    set_prune_rate_model(model, 1.0)
+    N_dim = 512
+    val_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.491, 0.482, 0.447), (0.247, 0.243, 0.262)),
+    ])
+    checkpoint = torch.load(path)["state_dict"]
+    for name, param in model.state_dict().items():
+        if checkpoint[name].shape != param.shape:
+            checkpoint.pop(name)
+    model.load_state_dict(checkpoint, strict=False)
+
+elif args.arch == "resnet20s":
+    path = "../../results/resnet20s/resnet20s_adv_pretrain/pretrain/latest_exp/checkpoint/model_best.pth.tar"
+    model = resnet20s(SubnetConv, nn.Linear, init_type="kaiming_normal", num_classes=0)
     set_prune_rate_model(model, 1.0)
     N_dim = 512
     val_transform = transforms.Compose([
