@@ -13,6 +13,7 @@ __pycache__/
 *.pth
 *.xml
 *.iml
+*.sh
 
 # C extensions
 *.so
