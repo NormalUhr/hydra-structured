@@ -105,7 +105,7 @@ elif args.arch == "resnet20s":
     path = "../../results/resnet20s/resnet20s_adv_pretrain/pretrain/latest_exp/checkpoint/model_best.pth.tar"
     model = resnet20s(SubnetConv, nn.Linear, init_type="kaiming_normal", num_classes=0)
     set_prune_rate_model(model, 1.0)
-    N_dim = 128
+    N_dim = 64
     val_transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.491, 0.482, 0.447), (0.247, 0.243, 0.262)),
