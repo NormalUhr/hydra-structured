@@ -162,11 +162,7 @@ def parse_args():
         "--dataset-idx-method",
         type=str,
         default=None,
-<<<<<<< HEAD
-        choices=["dino", "wrn", "resnet18"],
-=======
         choices=["dino", "wrn", "resnet18", "resnet20s"],
->>>>>>> 78e23b7e4f354a27dd9794fc4ee07670d3358b56
         help="What method to generalize the cluster"
     )
 
