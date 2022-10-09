@@ -91,7 +91,10 @@ class ResNets(nn.Module):
         self.layer1 = self._make_layer(block, 16, num_blocks[0], stride=1)
         self.layer2 = self._make_layer(block, 32, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 64, num_blocks[2], stride=2)
-        self.fc = linear_layer(64, num_classes)
+        if num_classes != 0:
+            self.fc = linear_layer(64, num_classes)
+        else:
+            self.fc = None
 
         self.apply(_weights_init)
 
@@ -113,7 +116,8 @@ class ResNets(nn.Module):
         out = self.layer3(out)
         out = F.avg_pool2d(out, out.size()[3])
         out = out.view(out.size(0), -1)
-        out = self.fc(out)
+        if self.fc is not None:
+            out = self.fc(out)
         return out
 
 

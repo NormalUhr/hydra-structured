@@ -11,6 +11,9 @@ __pycache__/
 *.tar
 *.ckpt
 *.pth
+*.xml
+*.iml
+*.sh
 
 # C extensions
 *.so
