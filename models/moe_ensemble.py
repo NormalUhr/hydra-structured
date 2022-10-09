@@ -36,6 +36,7 @@ class MoeEnsemble(nn.Module):
         else:
             cl, ll = get_layers(router_layer_type)
             self.router = models.__dict__[router_arch](cl, ll, router_init_type, num_classes=num_experts)
+            assert num_experts != num_classes
             set_prune_rate_model(self.router, 1.0)
             if router_checkpoint_path is not None:
                 checkpoint = torch.load(router_checkpoint_path)["state_dict"]
