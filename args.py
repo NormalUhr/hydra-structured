@@ -211,7 +211,7 @@ def parse_args():
         "--trainer",
         type=str,
         default="base",
-        choices=("base", "adv", "mixtrain", "crown-ibp", "smooth", "freeadv"),
+        choices=("base", "adv", "mixtrain", "crown-ibp", "smooth", "freeadv", "mix-adv-cert"),
         help="Natural (base) or adversarial or verifiable training",
     )
     parser.add_argument(

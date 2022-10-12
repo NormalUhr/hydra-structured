@@ -3,12 +3,12 @@ import time
 import numpy as np
 import torch
 import torch.nn as nn
-import torchvision
 
 from crown.bound_layers import BoundSequential
 from crown.eps_scheduler import EpsilonScheduler
 from utils.eval import accuracy
 from utils.logging import AverageMeter, ProgressMeter
+from utils.adv import trades_loss
 
 
 def train(
@@ -52,8 +52,9 @@ def train(
         prefix="Epoch: [{}]".format(epoch),
     )
 
-    model = BoundSequential.convert(model, {'same-slope': False, 'zero-lb': False, 'one-lb': False}).to(device)
-    model.train()
+    model_seq = BoundSequential.convert(model, {'same-slope': False, 'zero-lb': False, 'one-lb': False}).to(device)
+
+    model_seq.train()
     end = time.time()
 
     dataloader = train_loader
@@ -62,13 +63,12 @@ def train(
     for i, data in enumerate(dataloader):
         images, target = data[0].to(device), data[1].to(device)
 
-        output = model(images, method_opt="forward")
+        output = model_seq(images, method_opt="forward")
         ce = nn.CrossEntropyLoss()(output, target)
 
         eps = eps_scheduler.get_eps(epoch, i)
         # generate specifications
-        c = torch.eye(num_class).type_as(images)[target].unsqueeze(1) - torch.eye(num_class).type_as(images).unsqueeze(
-            0)
+        c = torch.eye(num_class).type_as(images)[target].unsqueeze(1) - torch.eye(num_class).type_as(images).unsqueeze(0)
         # remove specifications to self
         I = (~(target.unsqueeze(1) == torch.arange(num_class).to(device).type_as(target).unsqueeze(0)))
         c = (c[I].view(images.size(0), num_class - 1, num_class)).to(device)
@@ -82,7 +82,7 @@ def train(
         data_lb = torch.max(images - eps, images.min()).to(device)
 
         ub, ilb, relu_activity, unstable, dead, alive = \
-            model(norm=np.inf, x_U=data_ub, x_L=data_lb, eps=eps, C=c, method_opt="interval_range")
+            model_seq(norm=np.inf, x_U=data_ub, x_L=data_lb, eps=eps, C=c, method_opt="interval_range")
 
         crown_final_beta = 0.
         beta = (args.epsilon - eps * (1.0 - crown_final_beta)) / args.epsilon
@@ -90,7 +90,7 @@ def train(
         if beta < 1e-5:
             lb = ilb
         else:
-            _, _, clb, bias = model(norm=np.inf, x_U=data_ub, x_L=data_lb, eps=eps, C=c, method_opt="backward_range")
+            _, _, clb, bias = model_seq(norm=np.inf, x_U=data_ub, x_L=data_lb, eps=eps, C=c, method_opt="backward_range")
             # how much better is crown-ibp better than ibp?
             # diff = (clb - ilb).sum().item()
             lb = clb * beta + ilb * (1 - beta)
@@ -101,7 +101,25 @@ def train(
         # print(ce, robust_ce)
         racc = accuracy(-lb, target, topk=(1,))
 
-        loss = robust_ce
+        loss_cert = robust_ce
+
+        # calculate robust loss
+        loss_adv = trades_loss(
+            model=model,
+            x_natural=images,
+            y=target,
+            device=device,
+            optimizer=optimizer,
+            step_size=args.step_size,
+            epsilon=args.epsilon,
+            perturb_steps=args.num_steps,
+            beta=args.beta,
+            clip_min=args.clip_min,
+            clip_max=args.clip_max,
+            distance=args.distance,
+        )
+
+        loss = args.mix_ratio * loss_cert + (1 - args.mix_ratio) * loss_adv
 
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))

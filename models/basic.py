@@ -1,6 +1,6 @@
-import torch
-import torch.nn as nn
 import math
+
+import torch.nn as nn
 
 
 class Flatten(nn.Module):
@@ -144,7 +144,7 @@ class Dense(nn.Module):
             self.out_features = Ws[0].out_features
 
     def forward(self, *xs):
-        xs = xs[-len(self.Ws) :]
+        xs = xs[-len(self.Ws):]
         out = sum(W(x) for x, W in zip(xs, self.Ws) if W is not None)
         return out
 
@@ -187,16 +187,16 @@ def cifar_model_resnet(conv_layer, linear_layer, init_type, N=5, factor=1, **kwa
     for _ in range(N - 1):
         conv4.extend(block(64 * factor, 64 * factor, 3, False))
     layers = (
-        conv1
-        + conv2
-        + conv3
-        + conv4
-        + [
-            Flatten(),
-            linear_layer(64 * factor * 8 * 8, 1000),
-            nn.ReLU(),
-            linear_layer(1000, 10),
-        ]
+            conv1
+            + conv2
+            + conv3
+            + conv4
+            + [
+                Flatten(),
+                linear_layer(64 * factor * 8 * 8, 1000),
+                nn.ReLU(),
+                linear_layer(1000, 10),
+            ]
     )
     model = DenseSequential(*layers)
 
@@ -273,16 +273,16 @@ def cifar_model_resnet(N=5, factor=10):
     for _ in range(N - 1):
         conv4.extend(block(64 * factor, 64 * factor, 3, False))
     layers = (
-        conv1
-        + conv2
-        + conv3
-        + conv4
-        + [
-            Flatten(),
-            nn.Linear(64 * factor * 8 * 8, 1000),
-            nn.ReLU(),
-            nn.Linear(1000, 10),
-        ]
+            conv1
+            + conv2
+            + conv3
+            + conv4
+            + [
+                Flatten(),
+                nn.Linear(64 * factor * 8 * 8, 1000),
+                nn.ReLU(),
+                nn.Linear(1000, 10),
+            ]
     )
     model = DenseSequential(*layers)
 

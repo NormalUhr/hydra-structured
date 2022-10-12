@@ -27,7 +27,7 @@ def train(
     model.train()
     end = time.time()
 
-    dataloader = train_loader if sm_loader is None else zip(train_loader, sm_loader)
+    dataloader = train_loader
 
     step = epoch * len(train_loader)
 
@@ -41,21 +41,6 @@ def train(
             )
         else:
             images, target = data[0].to(device), data[1].to(device)
-
-        # # basic properties of training
-        # if i == 0:
-        #     print(
-        #         images.shape,
-        #         target.shape,
-        #         f"Batch_size from args: {args.batch_size}",
-        #         "lr: {:.5f}".format(optimizer.param_groups[0]["lr"]),
-        #     )
-        #     print(
-        #         "Pixel range for training images : [{}, {}]".format(
-        #             torch.min(images).data.cpu().numpy(),
-        #             torch.max(images).data.cpu().numpy(),
-        #         )
-        #     )
 
         output = model(images)
         loss = criterion(output, target)
@@ -77,13 +62,3 @@ def train(
 
         if i % args.print_freq == 0:
             progress.display(i)
-            progress.write_to_tensorboard(
-                writer, "train", epoch * len(train_loader) + i
-            )
-
-        # write a sample of training images to tensorboard (helpful for debugging)
-        if i == 0:
-            writer.add_image(
-                "training-images",
-                torchvision.utils.make_grid(images[0: len(images) // 4]),
-            )
