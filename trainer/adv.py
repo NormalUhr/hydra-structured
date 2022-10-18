@@ -88,13 +88,4 @@ def train(
 
         if i % args.print_freq == 0:
             progress.display(i)
-            progress.write_to_tensorboard(
-                writer, "train", epoch * len(train_loader) + i
-            )
 
-        # write a sample of training images to tensorboard (helpful for debugging)
-        if i == 0:
-            writer.add_image(
-                "training-images",
-                torchvision.utils.make_grid(images[0 : len(images) // 4]),
-            )

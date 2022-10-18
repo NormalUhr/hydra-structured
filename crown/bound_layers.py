@@ -212,7 +212,6 @@ class BoundLinear(Linear):
             return np.inf, upper, lower, 0, 0, 0, 0
             
 
-
 class BoundConv2d(Conv2d):
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True, bound_opts=None):
         super(BoundConv2d, self).__init__(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, 

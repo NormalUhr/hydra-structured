@@ -149,6 +149,164 @@ class Dense(nn.Module):
         return out
 
 
+def cifar_resnet_4bpp(conv_layer, linear_layer, init_type, num_blocks=2, num_classes=10, in_planes=64):
+    expansion = 1
+
+    self_in_planes = in_planes
+
+    def block(in_planes, planes, stride=1, kernel=3):
+        bn = False
+        if kernel == 3:
+            conv1 = conv_layer(
+                in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=(not bn))
+            conv2 = conv_layer(planes, planes, kernel_size=3, stride=1, padding=1, bias=(not bn))
+        elif kernel == 2:
+            conv1 = conv_layer(
+                in_planes, planes, kernel_size=2, stride=stride, padding=1, bias=(not bn))
+            conv2 = conv_layer(planes, planes, kernel_size=2, stride=1, padding=0, bias=(not bn))
+        elif kernel == 1:
+            conv1 = conv_layer(
+                in_planes, planes, kernel_size=1, stride=stride, padding=0, bias=(not bn))
+            conv2 = conv_layer(planes, planes, kernel_size=1, stride=1, padding=0, bias=(not bn))
+        else:
+            conv1 = None
+            conv2 = None
+            raise ValueError("kernel not supported!")
+
+        shortcut = None
+        if stride != 1 or in_planes != expansion * planes:
+            shortcut = conv_layer(in_planes, expansion * planes, kernel_size=1, stride=stride, bias=(not bn))
+
+        return [
+                conv1,
+                nn.ReLU(),
+                conv2,
+                Dense(
+                    shortcut,
+                    None,
+                    None,
+                    nn.ReLU()
+                ),
+                nn.ReLU()
+        ]
+
+    def _make_layer(in_planes, planes, num_blocks, stride, kernel):
+        strides = [stride] + [1] * (num_blocks - 1)
+        layers = []
+        for stride in strides:
+            layers.extend(block(in_planes, planes, stride, kernel))
+            in_planes = planes * expansion
+        return layers, in_planes
+
+    bn = False
+    conv1 = [conv_layer(3, in_planes, kernel_size=3, stride=2, padding=0, bias=not bn), nn.ReLU()]
+    layer1, self_in_planes = _make_layer(self_in_planes, in_planes * 2, num_blocks, stride=2, kernel=3)
+    layer2, self_in_planes = _make_layer(self_in_planes, in_planes * 2, num_blocks, stride=2, kernel=3)
+    linear1 = linear_layer(in_planes * 2 * expansion * 16, 100)
+    linear2 = linear_layer(100, num_classes)
+
+    layers = (
+        conv1
+        + layer1
+        + layer2
+        + [
+                Flatten(),
+                linear1,
+                nn.ReLU(),
+                linear2
+            ]
+    )
+
+    model = DenseSequential(*layers)
+
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+            m.weight.data.normal_(0, math.sqrt(2.0 / n))
+            if m.bias is not None:
+                m.bias.data.zero_()
+    return model
+
+
+def cifar_resnet_8bpp(conv_layer, linear_layer, init_type, num_blocks=4, num_classes=10, in_planes=64):
+    expansion = 1
+
+    self_in_planes = in_planes
+
+    def block(in_planes, planes, stride=1, kernel=3):
+        bn = False
+        if kernel == 3:
+            conv1 = conv_layer(
+                in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=(not bn))
+            conv2 = conv_layer(planes, planes, kernel_size=3, stride=1, padding=1, bias=(not bn))
+        elif kernel == 2:
+            conv1 = conv_layer(
+                in_planes, planes, kernel_size=2, stride=stride, padding=1, bias=(not bn))
+            conv2 = conv_layer(planes, planes, kernel_size=2, stride=1, padding=0, bias=(not bn))
+        elif kernel == 1:
+            conv1 = conv_layer(
+                in_planes, planes, kernel_size=1, stride=stride, padding=0, bias=(not bn))
+            conv2 = conv_layer(planes, planes, kernel_size=1, stride=1, padding=0, bias=(not bn))
+        else:
+            conv1 = None
+            conv2 = None
+            raise ValueError("kernel not supported!")
+
+        shortcut = None
+        if stride != 1 or in_planes != expansion * planes:
+            shortcut = conv_layer(in_planes, expansion * planes, kernel_size=1, stride=stride, bias=(not bn))
+
+        return [
+                conv1,
+                nn.ReLU(),
+                conv2,
+                Dense(
+                    shortcut,
+                    None,
+                    None,
+                    nn.ReLU()
+                ),
+                nn.ReLU()
+        ]
+
+    def _make_layer(in_planes, planes, num_blocks, stride, kernel):
+        strides = [stride] + [1] * (num_blocks - 1)
+        layers = []
+        for stride in strides:
+            layers.extend(block(in_planes, planes, stride, kernel))
+            in_planes = planes * expansion
+        return layers, in_planes
+
+    bn = False
+    conv1 = [conv_layer(3, in_planes, kernel_size=3, stride=2, padding=0, bias=not bn), nn.ReLU()]
+    layer1, self_in_planes = _make_layer(self_in_planes, in_planes * 2, num_blocks, stride=2, kernel=3)
+    layer2, self_in_planes = _make_layer(self_in_planes, in_planes * 2, num_blocks, stride=2, kernel=3)
+    linear1 = linear_layer(in_planes * 2 * expansion * 16, 100)
+    linear2 = linear_layer(100, num_classes)
+
+    layers = (
+        conv1
+        + layer1
+        + layer2
+        + [
+                Flatten(),
+                linear1,
+                nn.ReLU(),
+                linear2
+            ]
+    )
+
+    model = DenseSequential(*layers)
+
+    for m in model.modules():
+        if isinstance(m, nn.Conv2d):
+            n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+            m.weight.data.normal_(0, math.sqrt(2.0 / n))
+            if m.bias is not None:
+                m.bias.data.zero_()
+    return model
+
+
 def cifar_model_resnet(conv_layer, linear_layer, init_type, N=5, factor=1, **kwargs):
     def block(in_filters, out_filters, k, downsample):
         if not downsample:
@@ -235,61 +393,68 @@ def vgg4_without_maxpool(conv_layer, linear_layer, init_type, **kwargs):
     return model
 
 
-def cifar_model_resnet(N=5, factor=10):
-    def block(in_filters, out_filters, k, downsample):
-        if not downsample:
-            k_first = 3
-            skip_stride = 1
-            k_skip = 1
-        else:
-            k_first = 4
-            skip_stride = 2
-            k_skip = 2
-        return [
-            Dense(
-                nn.Conv2d(
-                    in_filters, out_filters, k_first, stride=skip_stride, padding=1
-                )
-            ),
-            nn.ReLU(),
-            Dense(
-                nn.Conv2d(
-                    in_filters, out_filters, k_skip, stride=skip_stride, padding=0
-                ),
-                None,
-                nn.Conv2d(out_filters, out_filters, k, stride=1, padding=1),
-            ),
-            nn.ReLU(),
-        ]
+# def cifar_model_resnet(N=5, factor=10, num_classes=10):
+#     def block(in_filters, out_filters, k, downsample):
+#         if not downsample:
+#             k_first = 3
+#             skip_stride = 1
+#             k_skip = 1
+#         else:
+#             k_first = 4
+#             skip_stride = 2
+#             k_skip = 2
+#         return [
+#             Dense(
+#                 nn.Conv2d(
+#                     in_filters, out_filters, k_first, stride=skip_stride, padding=1
+#                 )
+#             ),
+#             nn.ReLU(),
+#             Dense(
+#                 nn.Conv2d(
+#                     in_filters, out_filters, k_skip, stride=skip_stride, padding=0
+#                 ),
+#                 None,
+#                 nn.Conv2d(out_filters, out_filters, k, stride=1, padding=1),
+#             ),
+#             nn.ReLU(),
+#         ]
+#
+#     conv1 = [nn.Conv2d(3, 16, 3, stride=1, padding=1), nn.ReLU()]
+#     conv2 = block(16, 16 * factor, 3, False)
+#     for _ in range(N):
+#         conv2.extend(block(16 * factor, 16 * factor, 3, False))
+#     conv3 = block(16 * factor, 32 * factor, 3, True)
+#     for _ in range(N - 1):
+#         conv3.extend(block(32 * factor, 32 * factor, 3, False))
+#     conv4 = block(32 * factor, 64 * factor, 3, True)
+#     for _ in range(N - 1):
+#         conv4.extend(block(64 * factor, 64 * factor, 3, False))
+#     layers = (
+#             conv1
+#             + conv2
+#             + conv3
+#             + conv4
+#             + [
+#                 Flatten(),
+#                 nn.Linear(64 * factor * 8 * 8, 1000),
+#                 nn.ReLU(),
+#                 nn.Linear(1000, num_classes),
+#             ]
+#     )
+#     model = DenseSequential(*layers)
+#
+#     for m in model.modules():
+#         if isinstance(m, nn.Conv2d):
+#             n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
+#             m.weight.data.normal_(0, math.sqrt(2.0 / n))
+#             if m.bias is not None:
+#                 m.bias.data.zero_()
+#     return model
 
-    conv1 = [nn.Conv2d(3, 16, 3, stride=1, padding=1), nn.ReLU()]
-    conv2 = block(16, 16 * factor, 3, False)
-    for _ in range(N):
-        conv2.extend(block(16 * factor, 16 * factor, 3, False))
-    conv3 = block(16 * factor, 32 * factor, 3, True)
-    for _ in range(N - 1):
-        conv3.extend(block(32 * factor, 32 * factor, 3, False))
-    conv4 = block(32 * factor, 64 * factor, 3, True)
-    for _ in range(N - 1):
-        conv4.extend(block(64 * factor, 64 * factor, 3, False))
-    layers = (
-            conv1
-            + conv2
-            + conv3
-            + conv4
-            + [
-                Flatten(),
-                nn.Linear(64 * factor * 8 * 8, 1000),
-                nn.ReLU(),
-                nn.Linear(1000, 10),
-            ]
-    )
-    model = DenseSequential(*layers)
 
-    for m in model.modules():
-        if isinstance(m, nn.Conv2d):
-            n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-            m.weight.data.normal_(0, math.sqrt(2.0 / n))
-            if m.bias is not None:
-                m.bias.data.zero_()
-    return model
+if __name__ == "__main__":
+    model = cifar_model_resnet(nn.Conv2d, nn.Linear, "")
+    import torch
+    a = torch.randn((101, 3, 32, 32))
+    model(a)

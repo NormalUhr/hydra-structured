@@ -88,17 +88,6 @@ def base(model, device, val_loader, criterion, args, writer, epoch=0):
             if (i + 1) % args.print_freq == 0:
                 progress.display(i)
 
-            if writer:
-                progress.write_to_tensorboard(
-                    writer, "test", epoch * len(val_loader) + i
-                )
-
-            # write a sample of test images to tensorboard (helpful for debugging)
-            if i == 0 and writer:
-                writer.add_image(
-                    "test-images",
-                    torchvision.utils.make_grid(images[0 : len(images) // 4]),
-                )
         progress.display(i)  # print final results
 
     return top1.avg, top5.avg
@@ -170,17 +159,6 @@ def adv(model, device, val_loader, criterion, args, writer, epoch=0):
             if (i + 1) % args.print_freq == 0:
                 progress.display(i)
 
-            if writer:
-                progress.write_to_tensorboard(
-                    writer, "test", epoch * len(val_loader) + i
-                )
-
-            # write a sample of test images to tensorboard (helpful for debugging)
-            if i == 0 and writer:
-                writer.add_image(
-                    "Adv-test-images",
-                    torchvision.utils.make_grid(images[0 : len(images) // 4]),
-                )
         progress.display(i)  # print final results
 
     return adv_top1.avg, adv_top5.avg
@@ -246,17 +224,6 @@ def mixtrain(model, device, val_loader, criterion, args, writer, epoch=0):
             if (i + 1) % args.print_freq == 0:
                 progress.display(i)
 
-            if writer:
-                progress.write_to_tensorboard(
-                    writer, "test", epoch * len(val_loader) + i
-                )
-
-            # write a sample of test images to tensorboard (helpful for debugging)
-            if i == 0 and writer:
-                writer.add_image(
-                    "Adv-test-images",
-                    torchvision.utils.make_grid(images[0 : len(images) // 4]),
-                )
         progress.display(i)  # print final results
 
     return sym_top1.avg, sym_top1.avg
@@ -314,17 +281,6 @@ def ibp(model, device, val_loader, criterion, args, writer, epoch=0):
             if (i + 1) % args.print_freq == 0:
                 progress.display(i)
 
-            if writer:
-                progress.write_to_tensorboard(
-                    writer, "test", epoch * len(val_loader) + i
-                )
-
-            # write a sample of test images to tensorboard (helpful for debugging)
-            if i == 0 and writer:
-                writer.add_image(
-                    "Adv-test-images",
-                    torchvision.utils.make_grid(images[0 : len(images) // 4]),
-                )
         progress.display(i)  # print final results
 
     return ibp_top1.avg, ibp_top1.avg
@@ -384,18 +340,6 @@ def smooth(model, device, val_loader, criterion, args, writer, epoch=0):
 
             if (i + 1) % args.print_freq == 0:
                 progress.display(i)
-
-            if writer:
-                progress.write_to_tensorboard(
-                    writer, "test", epoch * len(val_loader) + i
-                )
-
-            # write a sample of test images to tensorboard (helpful for debugging)
-            if i == 0 and writer:
-                writer.add_image(
-                    "Adv-test-images",
-                    torchvision.utils.make_grid(images[0 : len(images) // 4]),
-                )
 
         progress.display(i)  # print final results
 
@@ -469,16 +413,6 @@ def freeadv(model, device, val_loader, criterion, args, writer, epoch=0):
 
         if (i + 1) % args.print_freq == 0:
             progress.display(i)
-
-        if writer:
-            progress.write_to_tensorboard(writer, "test", epoch * len(val_loader) + i)
-
-        # write a sample of test images to tensorboard (helpful for debugging)
-        if i == 0 and writer:
-            writer.add_image(
-                "Adv-test-images",
-                torchvision.utils.make_grid(input[0 : len(input) // 4]),
-            )
 
     progress.display(i)  # print final results
 

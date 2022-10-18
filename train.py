@@ -10,7 +10,6 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
 
 import data
 import models
@@ -119,9 +118,6 @@ def main():
         for m in model.experts:
             prepare_model(m, args)
 
-    # Setup tensorboard writer
-    writer = SummaryWriter(os.path.join(result_sub_dir, "tensorboard"))
-
     # Dataloader
     D = data.__dict__[args.dataset](args, normalize=args.normalize)
     train_loader, test_loader = D.data_loaders()
@@ -215,7 +211,7 @@ def main():
 
     # Evaluate
     if args.evaluate or args.exp_mode in ["prune", "finetune"]:
-        p1, _ = val(model, device, test_loader, criterion, args, writer)
+        p1, _ = val(model, device, test_loader, criterion, args, None)
         logger.info(f"Validation accuracy {args.val_method} for source-net: {p1}")
         if args.evaluate:
             return
@@ -235,20 +231,20 @@ def main():
             optimizer,
             epoch,
             args,
-            writer,
+            None,
             lr_policy,
         )
 
         # evaluate on test set
         if args.val_method == "smooth":
             prec1, radii = val(
-                model, device, test_loader, criterion, args, writer, epoch
+                model, device, test_loader, criterion, args, None, epoch
             )
             logger.info(f"Epoch {epoch}, mean provable Radii  {radii}")
         if args.val_method == "mixtrain" and epoch <= args.schedule_length:
             prec1 = 0.0
         else:
-            prec1, _ = val(model, device, test_loader, criterion, args, writer, epoch)
+            prec1, _ = val(model, device, test_loader, criterion, args, None, epoch)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1

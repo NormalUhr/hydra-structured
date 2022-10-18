@@ -28,6 +28,8 @@ from models.basic import (
     cifar_model_large,
     cifar_model_resnet,
     vgg4_without_maxpool,
+    cifar_resnet_4bpp,
+    cifar_resnet_8bpp,
 )
 
 from models.resnet import ResNet18, ResNet34, ResNet50
@@ -69,6 +71,8 @@ __all__ = [
     "cifar_model_large",
     "cifar_model_resnet",
     "vgg4_without_maxpool",
+    "cifar_resnet_4bpp",
+    "cifar_resnet_8bpp",
     "ResNet18",
     "ResNet34",
     "ResNet50",
