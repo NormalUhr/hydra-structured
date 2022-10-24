@@ -255,10 +255,17 @@ def parse_args():
     # Adversarial attacks
     parser.add_argument("--epsilon", default=8.0 / 255, type=float, help="perturbation")
     parser.add_argument(
-        "--num-steps", default=10, type=int, help="perturb number of steps"
+        "--num-steps", default=2, type=int, help="perturb number of steps"
     )
     parser.add_argument(
-        "--step-size", default=2.0 / 255, type=float, help="perturb step size"
+        "--step-size", default=5.0 / 255, type=float, help="perturb step size"
+    )
+    parser.add_argument("--epsilon-test", default=8.0 / 255, type=float, help="perturbation")
+    parser.add_argument(
+        "--num-steps-test", default=10, type=int, help="perturb number of steps"
+    )
+    parser.add_argument(
+        "--step-size-test", default=2.0 / 255, type=float, help="perturb step size"
     )
     parser.add_argument("--clip-min", default=0, type=float, help="perturb step size")
     parser.add_argument("--clip-max", default=1.0, type=float, help="perturb step size")
