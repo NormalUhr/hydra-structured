@@ -1,16 +1,15 @@
 import time
 
 import torch
-import torch.nn as nn
-import torchvision
 
-from utils.logging import AverageMeter, ProgressMeter
-from utils.eval import accuracy
 from utils.adv import trades_loss
+from utils.eval import accuracy
+from utils.logging import AverageMeter, ProgressMeter
+
 
 # TODO: add adversarial accuracy.
 def train(
-    model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer, lr_policy
+        model, device, train_loader, sm_loader, criterion, optimizer, epoch, args, writer, lr_policy
 ):
     print(
         " ->->->->->->->->->-> One epoch with Adversarial training (TRADES) <-<-<-<-<-<-<-<-<-<-"
@@ -89,3 +88,4 @@ def train(
         if i % args.print_freq == 0:
             progress.display(i)
 
+    progress.display(i)
