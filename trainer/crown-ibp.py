@@ -3,7 +3,6 @@ import time
 import numpy as np
 import torch
 import torch.nn as nn
-import torchvision
 
 from crown.bound_layers import BoundSequential
 from crown.eps_scheduler import EpsilonScheduler
@@ -52,7 +51,9 @@ def train(
         prefix="Epoch: [{}]".format(epoch),
     )
 
-    model = BoundSequential.convert(model, {'same-slope': False, 'zero-lb': False, 'one-lb': False}).to(device)
+    if not args.use_trainable_router:
+        model = BoundSequential.convert(model, {'same-slope': False, 'zero-lb': False, 'one-lb': False}).to(device)
+
     model.train()
     end = time.time()
 

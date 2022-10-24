@@ -18,7 +18,7 @@ class MoeEnsemble(nn.Module):
     def __init__(self, num_classes, expert_arch, router_arch, router_checkpoint_path=None,
                  num_experts=5, expert_layer_type="subnet", expert_init_type="kaiming_normal",
                  router_patch_size=8, router_checkpoint_key="teacher", routing_policy="hard",
-                 router_layer_type="subnet", router_init_type="kaiming_normal"):
+                 router_layer_type="dense", router_init_type="kaiming_normal"):
         super(MoeEnsemble, self).__init__()
 
         # define the router
@@ -61,6 +61,12 @@ class MoeEnsemble(nn.Module):
             models.__dict__[expert_arch](cl, ll, expert_init_type, num_classes=num_classes)
             for _ in range(num_experts)
         ])
+
+    def routing(self, x_expert, x_router=None):
+        x_router = x_expert if x_router is None else x_router
+        batch_size = x_expert.shape[0]
+        a = self.routing_func(self.router(x_router)).view(batch_size, self.num_experts, 1)
+        return a
 
     def forward(self, x_expert, x_router=None):
         # todo: hard routing mode could be optimized.

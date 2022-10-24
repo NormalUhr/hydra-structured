@@ -139,7 +139,12 @@ def main():
 
     # train & val method
     trainer = importlib.import_module(f"trainer.{args.trainer}").train
-    val = getattr(importlib.import_module("utils.eval"), args.val_method)
+    if args.val_method == "ibp":
+        adv_val = getattr(importlib.import_module("utils.eval"), "ibp")
+    else:
+        adv_val = getattr(importlib.import_module("utils.eval"), "adv")
+
+    std_val = getattr(importlib.import_module("utils.eval"), "base")
 
     # Load source_net (if checkpoint provided). Only load the state_dict (required for pruning and fine-tuning)
     if args.source_net:
@@ -211,8 +216,11 @@ def main():
 
     # Evaluate
     if args.evaluate or args.exp_mode in ["prune", "finetune"]:
-        p1, _ = val(model, device, test_loader, criterion, args, None)
-        logger.info(f"Validation accuracy {args.val_method} for source-net: {p1}")
+        std_acc, _ = std_val(model, device, test_loader, criterion, args)
+        adv_acc, _ = adv_val(model, device, test_loader, criterion, args)
+        logger.info(
+                f"Evaluation only: SA: {std_acc: .2f}%, RA: {adv_acc: .2f}%"
+            )
         if args.evaluate:
             return
 
@@ -236,19 +244,15 @@ def main():
         )
 
         # evaluate on test set
-        if args.val_method == "smooth":
-            prec1, radii = val(
-                model, device, test_loader, criterion, args, None, epoch
-            )
-            logger.info(f"Epoch {epoch}, mean provable Radii  {radii}")
-        if args.val_method == "mixtrain" and epoch <= args.schedule_length:
-            prec1 = 0.0
-        else:
-            prec1, _ = val(model, device, test_loader, criterion, args, None, epoch)
+        std_acc, _ = std_val(model, device, test_loader, criterion, args)
+        adv_acc, _ = adv_val(model, device, test_loader, criterion, args)
 
         # remember best prec@1 and save checkpoint
-        is_best = prec1 > best_prec1
-        best_prec1 = max(prec1, best_prec1)
+        is_best = adv_acc > best_prec1
+        best_prec1 = max(adv_acc, best_prec1)
+        print(
+            f"Epoch {epoch}, SA: {std_acc: .2f}%, RA: {adv_acc: .2f}%, best performance (RA): {best_prec1: .2f}"
+        )
         save_checkpoint(
             {
                 "epoch": epoch + 1,
@@ -261,10 +265,6 @@ def main():
             args,
             result_dir=os.path.join(result_sub_dir, "checkpoint"),
             save_dense=args.save_dense,
-        )
-
-        logger.info(
-            f'Epoch {epoch}, val-method {args.val_method}, validation accuracy {prec1:.2f}, best_prec {best_prec1:.2f},  epoch duration {time.time() - start:.2f}'
         )
 
         clone_results_to_latest_subdir(

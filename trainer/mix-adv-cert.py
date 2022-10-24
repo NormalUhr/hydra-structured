@@ -52,9 +52,9 @@ def train(
         prefix="Epoch: [{}]".format(epoch),
     )
 
-    model_seq = BoundSequential.convert(model, {'same-slope': False, 'zero-lb': False, 'one-lb': False}).to(device)
-
-    model_seq.train()
+    if not args.use_trainable_router:
+        model_seq = BoundSequential.convert(model, {'same-slope': False, 'zero-lb': False, 'one-lb': False}).to(device)
+        model_seq.train()
     end = time.time()
 
     dataloader = train_loader
