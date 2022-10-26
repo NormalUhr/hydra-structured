@@ -18,11 +18,12 @@ def train(
     batch_time = AverageMeter("Time", ":6.3f")
     data_time = AverageMeter("Data", ":6.3f")
     losses = AverageMeter("Loss", ":.4f")
+    trades_losses = AverageMeter("Loss", ":.4f")
     top1 = AverageMeter("Acc_1", ":6.2f")
     top5 = AverageMeter("Acc_5", ":6.2f")
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses, top1, top5],
+        [batch_time, data_time, losses, trades_losses, top1, top5],
         prefix="Epoch: [{}]".format(epoch),
     )
 
@@ -55,7 +56,7 @@ def train(
         output = model(images)
 
         # calculate robust loss
-        loss = trades_loss(
+        loss, trades_loss = trades_loss(
             model=model,
             x_natural=images,
             y=target,
@@ -73,6 +74,7 @@ def train(
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
+        trades_losses.update(trades_loss.item(), images.size(0))
         top1.update(acc1[0], images.size(0))
         top5.update(acc5[0], images.size(0))
 

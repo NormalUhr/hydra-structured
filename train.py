@@ -250,7 +250,7 @@ def main():
         # remember best prec@1 and save checkpoint
         is_best = adv_acc > best_prec1
         best_prec1 = max(adv_acc, best_prec1)
-        print(
+        logger.info(
             f"Epoch {epoch}, SA: {std_acc: .2f}%, RA: {adv_acc: .2f}%, best performance (RA): {best_prec1: .2f}"
         )
         save_checkpoint(

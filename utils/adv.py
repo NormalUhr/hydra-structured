@@ -99,7 +99,7 @@ def trades_loss(
         F.log_softmax(model(x_adv), dim=1), F.softmax(model(x_natural), dim=1)
     )
     loss = loss_natural + beta * loss_robust
-    return loss
+    return loss, loss_robust.detach()
 
 
 def trades_loss_hot_vector(
