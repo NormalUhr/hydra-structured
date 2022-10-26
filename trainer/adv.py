@@ -56,7 +56,7 @@ def train(
         output = model(images)
 
         # calculate robust loss
-        loss, trades_loss = trades_loss(
+        loss, _trades_loss = trades_loss(
             model=model,
             x_natural=images,
             y=target,
@@ -74,7 +74,7 @@ def train(
         # measure accuracy and record loss
         acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images.size(0))
-        trades_losses.update(trades_loss.item(), images.size(0))
+        trades_losses.update(_trades_loss.item(), images.size(0))
         top1.update(acc1[0], images.size(0))
         top5.update(acc5[0], images.size(0))
 
